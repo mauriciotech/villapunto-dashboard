@@ -598,10 +598,19 @@ const TT = {background:'#0A1018',border:'1px solid #1A2840',borderRadius:8,paddi
 const GRID = 'rgba(26,40,64,.7)';
 
 function mkChart(id, config) {
-  if(charts[id]) charts[id].destroy();
-  const ctx = document.getElementById(id);
-  if(!ctx) return null;
-  charts[id] = new Chart(ctx.getContext('2d'), config);
+  if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const canvas = document.getElementById(id);
+  if(!canvas) return null;
+  const wrap = canvas.parentElement;
+  // Force explicit pixel dimensions so Chart.js gets correct size
+  // even when the container is in a hidden/offscreen tab-pane
+  const w = wrap.offsetWidth || wrap.parentElement?.offsetWidth || 800;
+  const h = wrap.offsetHeight || parseInt(wrap.style.height) || 220;
+  canvas.width  = w;
+  canvas.height = h;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  charts[id] = new Chart(canvas.getContext('2d'), config);
   return charts[id];
 }
 
@@ -694,36 +703,23 @@ function refreshAllCharts() {
   const s = computeStats(filteredDeals);
   updateKPIs(s);
 
-  // Render DOM elements (non-chart) immediately
   const safeRender = (name, fn) => {
     try { fn(); } catch(e) { console.warn('Render error [' + name + ']:', e.message); }
   };
 
-  // Always render DOM content for all tabs
-  safeRender('pipeline-dom',  () => renderPipeline(s));
-  safeRender('traffic-dom',   () => renderTraffic(s));
-  safeRender('geography-dom', () => renderGeography(s));
-  safeRender('survey-dom',    () => renderSatisfaction());
-
-  // Defer chart rendering to next frame so canvas has correct dimensions
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      const activeTab = document.querySelector('.main-tab.active')?.id?.replace('tab-','') || 'overview';
-      if (activeTab === 'overview') {
-        safeRender('monthly', () => renderMonthly(s));
-        safeRender('purpose', () => renderPurpose(s));
-        safeRender('checkin', () => renderCheckin());
-      }
-      if (activeTab === 'pipeline')     safeRender('pipeline',  () => renderPipeline(s));
-      if (activeTab === 'traffic')      safeRender('traffic',   () => renderTraffic(s));
-      if (activeTab === 'geography')    safeRender('geography', () => renderGeography(s));
-      if (activeTab === 'satisfaction') safeRender('survey',    () => renderSatisfaction());
-    }, 50);
-  });
+  // Render all tabs — mkChart now forces canvas dimensions so hidden tabs work too
+  safeRender('monthly',      () => renderMonthly(s));
+  safeRender('purpose',      () => renderPurpose(s));
+  safeRender('checkin',      () => renderCheckin());
+  safeRender('pipeline',     () => renderPipeline(s));
+  safeRender('traffic',      () => renderTraffic(s));
+  safeRender('geography',    () => renderGeography(s));
+  safeRender('satisfaction', () => renderSatisfaction());
 
   document.getElementById('footerRight').textContent =
     `${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} deals · ${new Date().toLocaleDateString('en')}`;
 }
+
 
 // ═══════════════════════════════════════════════════════
 // KPIs
@@ -1201,19 +1197,16 @@ function showTab(id) {
   document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('pane-' + id).classList.add('active');
   document.getElementById('tab-' + id).classList.add('active');
-
-  // Defer so the tab pane has correct dimensions before Chart.js measures canvas
+  // mkChart forces canvas dimensions so no delay needed
   const s = computeStats(filteredDeals);
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      if (id === 'overview')     { renderMonthly(s); renderPurpose(s); renderCheckin(); }
-      if (id === 'pipeline')     { renderPipeline(s); }
-      if (id === 'traffic')      { renderTraffic(s); }
-      if (id === 'geography')    { renderGeography(s); }
-      if (id === 'satisfaction') { renderSatisfaction(); }
-    }, 50);
-  });
+  const safe = (fn) => { try { fn(); } catch(e) { console.warn(e); } };
+  if (id === 'overview')     { safe(()=>renderMonthly(s)); safe(()=>renderPurpose(s)); safe(()=>renderCheckin()); }
+  if (id === 'pipeline')     safe(()=>renderPipeline(s));
+  if (id === 'traffic')      safe(()=>renderTraffic(s));
+  if (id === 'geography')    safe(()=>renderGeography(s));
+  if (id === 'satisfaction') safe(()=>renderSatisfaction());
 }
+
 
 async function doRefresh(btn) {
   const icon = document.getElementById('refreshIcon');
