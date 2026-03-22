@@ -694,27 +694,32 @@ function refreshAllCharts() {
   const s = computeStats(filteredDeals);
   updateKPIs(s);
 
-  const activeTab = document.querySelector('.main-tab.active')?.id?.replace('tab-','') || 'overview';
-
+  // Render DOM elements (non-chart) immediately
   const safeRender = (name, fn) => {
     try { fn(); } catch(e) { console.warn('Render error [' + name + ']:', e.message); }
   };
 
-  if (activeTab === 'overview') {
-    safeRender('monthly',  () => renderMonthly(s));
-    safeRender('purpose',  () => renderPurpose(s));
-    safeRender('checkin',  () => renderCheckin());
-  }
-  if (activeTab === 'pipeline')     safeRender('pipeline',  () => renderPipeline(s));
-  if (activeTab === 'traffic')      safeRender('traffic',   () => renderTraffic(s));
-  if (activeTab === 'geography')    safeRender('geography', () => renderGeography(s));
-  if (activeTab === 'satisfaction') safeRender('survey',    () => renderSatisfaction());
+  // Always render DOM content for all tabs
+  safeRender('pipeline-dom',  () => renderPipeline(s));
+  safeRender('traffic-dom',   () => renderTraffic(s));
+  safeRender('geography-dom', () => renderGeography(s));
+  safeRender('survey-dom',    () => renderSatisfaction());
 
-  // Also render non-chart DOM for inactive tabs (funnel, channel cards, etc.)
-  if (activeTab !== 'pipeline')     safeRender('pipeline-bg',  () => renderPipeline(s));
-  if (activeTab !== 'traffic')      safeRender('traffic-bg',   () => renderTraffic(s));
-  if (activeTab !== 'geography')    safeRender('geography-bg', () => renderGeography(s));
-  if (activeTab !== 'satisfaction') safeRender('survey-bg',    () => renderSatisfaction());
+  // Defer chart rendering to next frame so canvas has correct dimensions
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const activeTab = document.querySelector('.main-tab.active')?.id?.replace('tab-','') || 'overview';
+      if (activeTab === 'overview') {
+        safeRender('monthly', () => renderMonthly(s));
+        safeRender('purpose', () => renderPurpose(s));
+        safeRender('checkin', () => renderCheckin());
+      }
+      if (activeTab === 'pipeline')     safeRender('pipeline',  () => renderPipeline(s));
+      if (activeTab === 'traffic')      safeRender('traffic',   () => renderTraffic(s));
+      if (activeTab === 'geography')    safeRender('geography', () => renderGeography(s));
+      if (activeTab === 'satisfaction') safeRender('survey',    () => renderSatisfaction());
+    }, 50);
+  });
 
   document.getElementById('footerRight').textContent =
     `${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} deals · ${new Date().toLocaleDateString('en')}`;
@@ -1197,13 +1202,17 @@ function showTab(id) {
   document.getElementById('pane-' + id).classList.add('active');
   document.getElementById('tab-' + id).classList.add('active');
 
-  // Re-render charts for the active tab so they get correct dimensions
+  // Defer so the tab pane has correct dimensions before Chart.js measures canvas
   const s = computeStats(filteredDeals);
-  if (id === 'overview')      { renderMonthly(s); renderPurpose(s); renderCheckin(); }
-  if (id === 'pipeline')      { renderPipeline(s); }
-  if (id === 'traffic')       { renderTraffic(s); }
-  if (id === 'geography')     { renderGeography(s); }
-  if (id === 'satisfaction')  { renderSatisfaction(); }
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      if (id === 'overview')     { renderMonthly(s); renderPurpose(s); renderCheckin(); }
+      if (id === 'pipeline')     { renderPipeline(s); }
+      if (id === 'traffic')      { renderTraffic(s); }
+      if (id === 'geography')    { renderGeography(s); }
+      if (id === 'satisfaction') { renderSatisfaction(); }
+    }, 50);
+  });
 }
 
 async function doRefresh(btn) {
