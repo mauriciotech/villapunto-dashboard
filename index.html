@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Villa Punto de Vista — Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300&family=DM+Mono:wght@300;400;500&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#05080F; --s1:#090E1A; --s2:#0D1525; --s3:#111C30;
+  --bd:#1A2840; --bd2:#243558; --bd3:#2D4470;
+  --gold:#C8A45E; --gold2:#E6C882; --gold3:#8B6830;
+  --teal:#2CC4C4; --green:#2ECC8A; --red:#E05C5C;
+  --amber:#F5A623; --purple:#9B7EF8; --blue:#4B9EF5;
+  --text:#ECF0F8; --dim:#5C7294; --dim2:#3A506E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1420px;margin:0 auto;padding:0 28px 60px}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px;border-bottom:1px solid var(--bd);margin-bottom:0}
+.logo-area{display:flex;align-items:center;gap:16px}
+.logo-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(200,164,94,.25)}
+.logo-text .sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px}
+.logo-text .main{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text);letter-spacing:.03em}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(44,196,196,.08);border:1px solid rgba(44,196,196,.2);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.1em}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
+
+/* ── PERIOD BAR ── */
+.period-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:10px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:100;margin:0 -28px}
+.period-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;margin-right:4px}
+.period-btn{background:var(--s2);border:1px solid var(--bd);color:var(--dim);border-radius:6px;padding:5px 11px;font-size:11px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.period-btn:hover{border-color:var(--gold);color:var(--gold)}
+.period-btn.active{background:rgba(200,164,94,.12);border-color:var(--gold);color:var(--gold);font-weight:500}
+.period-sep{width:1px;height:20px;background:var(--bd);margin:0 4px}
+.period-stat{font-family:'DM Mono',monospace;font-size:10px;margin-left:auto}
+.period-stat span{color:var(--dim)}
+.period-stat b{color:var(--teal)}
+
+/* ── MAIN TABS ── */
+.main-tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin-top:20px}
+.main-tab{background:none;border:none;color:var(--dim);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:12px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px}
+.main-tab:hover{color:var(--text)}
+.main-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-pane{visibility:hidden;position:absolute;width:calc(100% - 56px);max-width:1420px;pointer-events:none;padding-top:22px;top:-9999px}
+.tab-pane.active{visibility:visible;position:relative;width:auto;pointer-events:all;top:auto}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s;cursor:default}
+.kpi:hover{border-color:var(--bd2);transform:translateY(-2px)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+.kpi-icon{font-size:18px;opacity:.2;position:absolute;top:14px;right:14px}
+.kpi-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;line-height:1}
+.kpi-sub{font-size:11px;color:var(--dim);margin-top:6px}
+.kpi-sub b{color:var(--accent)}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.g4{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:16px;margin-bottom:16px}
+.g5{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+
+/* ── CARD ── */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:22px 24px;transition:border-color .3s}
+.card:hover{border-color:var(--bd2)}
+.card-title{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.badge{background:var(--s3);color:var(--dim);font-size:9px;border-radius:20px;padding:2px 9px;letter-spacing:.05em}
+.chart-wrap{position:relative;cursor:pointer}
+.chart-wrap::after{content:'click to drill down';position:absolute;bottom:6px;right:8px;font-family:'DM Mono',monospace;font-size:8px;color:var(--dim2);letter-spacing:.1em;opacity:0;transition:opacity .3s}
+.chart-wrap:hover::after{opacity:1}
+
+/* ── FUNNEL ── */
+.funnel{display:flex;flex-direction:column;gap:7px}
+.funnel-row{display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .2s}
+.funnel-row:hover{background:var(--s2)}
+.funnel-label{font-size:11px;color:var(--text);width:140px;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:26px;background:var(--s2);border-radius:6px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;font-family:'DM Mono',monospace;font-size:11px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.funnel-n{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;width:28px;text-align:right;flex-shrink:0}
+
+/* ── DONUT ── */
+.donut-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:3px 6px;transition:background .2s}
+.donut-row:hover{background:var(--s2)}
+.donut-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.donut-lbl{font-size:11.5px;color:var(--dim);flex:1}
+.donut-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text)}
+
+/* ── METRIC ── */
+.metric-list{display:flex;flex-direction:column;gap:10px}
+.metric-item{background:var(--s2);border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd);cursor:pointer;transition:border-color .2s}
+.metric-item:hover{border-color:var(--bd3)}
+.metric-name{font-size:12px;font-weight:400;color:var(--text)}
+.metric-detail{font-size:10px;color:var(--dim);margin-top:2px}
+.metric-big{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+
+/* ── PROGRESS ── */
+.prog-row{margin-bottom:11px;cursor:pointer}
+.prog-head{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11.5px}
+.prog-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+
+/* ── GEO ── */
+.geo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.geo-pill{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:11px 14px;text-align:center;cursor:pointer;transition:border-color .2s}
+.geo-pill:hover{border-color:var(--bd3)}
+.geo-flag{font-size:20px;margin-bottom:4px}
+.geo-n{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+.geo-name{font-size:9.5px;color:var(--dim)}
+.geo-rev{font-size:10px;margin-top:2px}
+
+/* ── INSIGHT ── */
+.insight{background:var(--s2);border-radius:10px;padding:14px 16px;border-left:3px solid var(--c);margin-bottom:10px}
+.insight .i-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px}
+.insight .i-body{font-size:10.5px;color:var(--dim);line-height:1.55}
+
+/* ── SURVEY STARS ── */
+.stars-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px 14px;background:var(--s2);border-radius:10px;border:1px solid var(--bd)}
+.stars-label{font-size:11px;color:var(--dim);flex:1}
+.stars-val{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-weight:600}
+.stars-bar-wrap{width:120px;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.stars-fill{height:100%;background:var(--gold);border-radius:3px}
+.star-emoji{font-size:11px}
+
+/* ── DRILL-DOWN MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,15,.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:20px;width:100%;max-width:1100px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text)}
+.modal-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);margin-top:3px;letter-spacing:.1em}
+.modal-close{background:var(--s2);border:1px solid var(--bd);color:var(--dim);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{color:var(--text);border-color:var(--bd2)}
+.modal-body{overflow-y:auto;padding:0}
+.drill-table{width:100%;border-collapse:collapse}
+.drill-table th{background:var(--s2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 16px;text-align:left;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--bd)}
+.drill-table td{padding:10px 16px;font-size:12px;border-bottom:1px solid rgba(26,40,64,.5);color:var(--text)}
+.drill-table tr:hover td{background:rgba(13,21,37,.6)}
+.drill-table tr:last-child td{border-bottom:none}
+.stage-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-family:'DM Mono',monospace}
+.modal-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);padding:10px 24px 10px;border-top:1px solid var(--bd)}
+
+/* ── TRAFFIC CHANNEL CARDS ── */
+.channel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.channel-card{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s}
+.channel-card:hover{border-color:var(--bd3)}
+.channel-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px}
+.channel-leads{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:2px}
+.channel-meta{font-size:10px;color:var(--dim);display:flex;gap:10px}
+.channel-conv{color:var(--green)}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--bd);margin-top:32px;padding-top:16px;display:flex;justify-content:space-between;align-items:center}
+footer .f-left{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim2)}
+footer .f-right{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim2)}
+
+/* ── ANIMATIONS ── */
+.fade-in{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.g2,.g3,.g4,.g5{grid-template-columns:1fr}.span2,.span3{grid-column:span 1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header class="fade-in">
+  <div class="logo-area">
+    <div class="logo-icon">🏡</div>
+    <div class="logo-text">
+      <div class="sub">Sales Intelligence</div>
+      <div class="main">Villa Punto de Vista</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="doRefresh(this)" style="background:rgba(200,164,94,.1);border:1px solid rgba(200,164,94,.3);color:var(--gold);border-radius:8px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s" onmouseover="this.style.background='rgba(200,164,94,.2)'" onmouseout="this.style.background='rgba(200,164,94,.1)'">
+        <span id="refreshIcon">↻</span> REFRESH
+      </button>
+      <div class="live-badge"><span class="live-dot"></span>LIVE · Supabase</div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);text-align:right" id="headerSub">vw_deals_dashboard · All time</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim2);text-align:right" id="lastRefreshed"></div>
+  </div>
+</header>
+
+<!-- PERIOD BAR -->
+<div class="period-bar fade-in d1">
+  <span class="period-label">Period</span>
+  <button class="period-btn" onclick="setPeriod('thisweek')">This Week</button>
+  <button class="period-btn" onclick="setPeriod('lastweek')">Last Week</button>
+  <button class="period-btn" onclick="setPeriod('thismonth')">This Month</button>
+  <button class="period-btn" onclick="setPeriod('lastmonth')">Last Month</button>
+  <button class="period-btn" onclick="setPeriod('thisquarter')">This Quarter</button>
+  <button class="period-btn" onclick="setPeriod('lastquarter')">Last Quarter</button>
+  <button class="period-btn" onclick="setPeriod('thisyear')">This Year</button>
+  <button class="period-btn" onclick="setPeriod('lastyear')">Last Year</button>
+  <div class="period-sep"></div>
+  <button class="period-btn active" onclick="setPeriod('all')">All Time</button>
+  <div class="period-stat" id="periodStat"><span>Showing: </span><b id="periodLabel">All Records</b></div>
+</div>
+
+<!-- MAIN TABS -->
+<div class="main-tabs fade-in d2">
+  <button class="main-tab active" onclick="showTab('overview')" id="tab-overview">📊 Overview</button>
+  <button class="main-tab" onclick="showTab('pipeline')" id="tab-pipeline">🔀 Pipeline</button>
+  <button class="main-tab" onclick="showTab('traffic')" id="tab-traffic">🌐 Traffic & Source</button>
+  <button class="main-tab" onclick="showTab('geography')" id="tab-geography">🌍 Geography</button>
+  <button class="main-tab" onclick="showTab('satisfaction')" id="tab-satisfaction">⭐ Satisfaction</button>
+</div>
+
+<!-- ════════════ TAB: OVERVIEW ════════════ -->
+<div class="tab-pane active" id="pane-overview">
+
+  <!-- KPIs -->
+  <div class="kpi-strip fade-in d2" id="kpiStrip">
+    <div class="kpi" style="--accent:var(--gold)"><div class="kpi-icon">💰</div><div class="kpi-label">Total Revenue</div><div class="kpi-val" style="color:var(--gold)" id="kRevenue">$999k</div><div class="kpi-sub" id="kRevenueSub">18 deals closed</div></div>
+    <div class="kpi" style="--accent:var(--green)"><div class="kpi-icon">✅</div><div class="kpi-label">Won</div><div class="kpi-val" style="color:var(--green)" id="kWon">—</div><div class="kpi-sub" id="kWonSub"></div></div>
+    <div class="kpi" style="--accent:var(--red)"><div class="kpi-icon">❌</div><div class="kpi-label">Lost</div><div class="kpi-val" style="color:var(--red)" id="kLost">—</div><div class="kpi-sub" id="kLostSub"></div></div>
+    <div class="kpi" style="--accent:var(--teal)"><div class="kpi-icon">◎</div><div class="kpi-label">Active Pipeline</div><div class="kpi-val" style="color:var(--teal)" id="kActive">—</div><div class="kpi-sub" id="kActiveSub"></div></div>
+    <div class="kpi" style="--accent:var(--purple)"><div class="kpi-icon">🎯</div><div class="kpi-label">Avg. Ticket</div><div class="kpi-val" style="color:var(--purple)" id="kTicket">$53k</div><div class="kpi-sub">per Won deal</div></div>
+    <div class="kpi" style="--accent:var(--amber)"><div class="kpi-icon">📋</div><div class="kpi-label">Total Deals</div><div class="kpi-val" style="color:var(--amber)" id="kTotal">—</div><div class="kpi-sub" id="kTotalSub"></div></div>
+  </div>
+
+  <div class="g2 fade-in d2">
+    <!-- Monthly trend -->
+    <div class="card span2">
+      <div class="card-title">Monthly Volume & Revenue <span class="badge" id="monthlyBadge">2025–2026</span></div>
+      <div class="chart-wrap" style="height:210px" onclick="drillMonthly()">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="g3 fade-in d3">
+    <!-- Purpose donut -->
+    <div class="card">
+      <div class="card-title">Visit Intent</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:130px;height:130px;flex-shrink:0;cursor:pointer" onclick="drillPurpose()">
+          <canvas id="purposeChart"></canvas>
+        </div>
+        <div style="flex:1" id="purposeLegend"></div>
+      </div>
+    </div>
+    <!-- Check-in demand -->
+    <div class="card">
+      <div class="card-title">Check-in Demand <span class="badge">2026–2027</span></div>
+      <div class="chart-wrap" style="height:150px" onclick="drillCheckin()">
+        <canvas id="checkinChart"></canvas>
+      </div>
+    </div>
+    <!-- Insights -->
+    <div class="card">
+      <div class="card-title">Executive Insights</div>
+      <div class="insight" style="--c:var(--red)"><div class="i-title">⚠️ Stalled Pipeline</div><div class="i-body">82 deals (35%) stagnant in Cold+Tel. Without automated follow-up, loss rate will rise.</div></div>
+      <div class="insight" style="--c:var(--gold)"><div class="i-title">💡 Both Villas = 56% of Revenue</div><div class="i-body">15 deals → $561k. Avg ticket $37k vs $13k individual. Prioritize this package.</div></div>
+      <div class="insight" style="--c:var(--amber)"><div class="i-title">🔥 Google Paid = 80% of Leads</div><div class="i-body">Critical dependency. ChatGPT Organic (4 leads) emerging with lowest CAC.</div></div>
+      <div class="insight" style="--c:var(--purple)"><div class="i-title">🌎 Venezuela Underexplored</div><div class="i-body">21 leads, 1 Won ($43k). Similar conversion to US. No structured acquisition channel.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB: PIPELINE ════════════ -->
+<div class="tab-pane" id="pane-pipeline">
+  <div class="g2 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Pipeline by Stage <span class="badge" id="pipelineBadge"></span></div>
+      <div class="funnel" id="funnelEl"></div>
+    </div>
+  </div>
+  <div class="g3 fade-in d2">
+    <div class="card">
+      <div class="card-title">Pipeline Health</div>
+      <div id="pipelineHealth"></div>
+    </div>
+    <div class="card span2">
+      <div class="card-title">Villa Performance</div>
+      <div class="metric-list" id="villaList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB: TRAFFIC ════════════ -->
+<div class="tab-pane" id="pane-traffic">
+  <div class="channel-grid fade-in d1" id="channelCards"></div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Leads by Traffic Source</div>
+      <div class="chart-wrap" style="height:220px" onclick="drillTrafficChart()">
+        <canvas id="trafficChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Channel Mix</div>
+      <div id="channelMix"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d3">
+    <div class="card">
+      <div class="card-title">Revenue by Traffic Source <span class="badge">Won deals only</span></div>
+      <div class="chart-wrap" style="height:200px" onclick="drillRevenueBySource()">
+        <canvas id="revenueSourceChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Trip Purpose vs Traffic Source</div>
+      <div class="chart-wrap" style="height:200px" onclick="drillPurposeSource()">
+        <canvas id="purposeSourceChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB: GEOGRAPHY ════════════ -->
+<div class="tab-pane" id="pane-geography">
+  <div class="g5 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Leads by Country</div>
+      <div class="chart-wrap" style="height:200px" onclick="drillCountry()">
+        <canvas id="countryChart"></canvas>
+      </div>
+      <div class="geo-grid" style="margin-top:14px" id="countryPills"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top US States</div>
+      <div id="statesList"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Leads by State (US) <span class="badge">bar</span></div>
+      <div class="chart-wrap" style="height:220px" onclick="drillStates()">
+        <canvas id="statesChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Country Conversion Rates</div>
+      <div id="countryConv" style="margin-top:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB: SATISFACTION ════════════ -->
+<div class="tab-pane" id="pane-satisfaction">
+  <div class="g3 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Guest Survey Scores <span class="badge">Post-stay ratings</span></div>
+      <div id="surveyScores"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Survey Overview</div>
+      <div id="surveyOverview"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Scores by Category <span class="badge">radar</span></div>
+      <div style="height:220px;display:flex;align-items:center;justify-content:center">
+        <canvas id="surveyRadar" style="max-height:220px"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Survey Records</div>
+      <div id="surveyRecords"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- FOOTER -->
+<div class="wrap" style="padding-top:0">
+  <footer class="fade-in">
+    <div class="f-left">Villa Punto de Vista · Executive Dashboard v2 · Supabase vw_deals_dashboard</div>
+    <div class="f-right" id="footerRight">All time · 386 deals · Mar 2026</div>
+  </footer>
+</div>
+
+<!-- DRILL-DOWN MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Deal Details</div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="drill-table" id="drillTable">
+        <thead id="drillHead"></thead>
+        <tbody id="drillBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-count" id="modalCount"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// RAW DATA (from Supabase)
+// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════
+const SB_URL  = 'https://ikebqhtughueiwfaoqcj.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlr' +
+                'ZWJxaHR1Z2h1ZWl3ZmFvcWNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzY0NzMsImV4' +
+                'cCI6MjA4ODExMjQ3M30.7WN1c3oTUQSfqAz6y1at00kAIy_yZBf6HQZ64U2t-Tw';
+const PAGE    = 1000; // Supabase max rows per request
+
+const FIELDS = [
+  'deal_id',
+  'deal_name',
+  'pipeline_stage',
+  'probability',
+  'status',
+  'created_at',
+  'client_creation_date_cus_1593388',
+  'webfx_source_cus_3854211',
+  'webfx_medium_cus_3854212',
+  'country_text_cus_3879905',
+  'state_cus_530951',
+  'villa_service_text_cus_2990224',
+  'overnight_guests_cus_79048',
+  'check_in_cus_79049',
+  'rental_total_cus_3818376',
+  'client_first_name_cus_3057208',
+  'survey_overall_satisfaction_cus_3858473',
+  'survey_pre_arrival_cus_3858474',
+  'survey_villa_manager_cus_3858475',
+  'survey_accommodations_cus_3858476',
+  'survey_housekeeping_cus_3858477',
+  'survey_breakfast_cus_3858478',
+  'survey_overall_experience_cus_3858479',
+].join(',');
+
+async function fetchFromSupabase() {
+  let all = [], offset = 0;
+  while (true) {
+    const url = `${SB_URL}/rest/v1/deals?select=${FIELDS}&order=created_at.desc&limit=${PAGE}&offset=${offset}`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Accept': 'application/json'
+      }
+    });
+    if (!res.ok) throw new Error(`Supabase error ${res.status}: ${await res.text()}`);
+    const page = await res.json();
+    all = all.concat(page);
+    if (page.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all.map(mapRow);
+}
+
+function mapRow(d) {
+  const rawRev = d.rental_total_cus_3818376 || '';
+  const revenue = parseFloat(String(rawRev).replace(/[^0-9.]/g, '')) || null;
+  const rawCheckin = d.check_in_cus_79049 || '';
+  const check_in = rawCheckin ? String(rawCheckin).replace(/\//g, '-').slice(0, 10) : null;
+  const pipelineDate = d.client_creation_date_cus_1593388
+    ? String(d.client_creation_date_cus_1593388).slice(0, 10) : null;
+  const created_date = pipelineDate || (d.created_at ? d.created_at.slice(0, 10) : null);
+  return {
+    deal_id:        d.deal_id,
+    deal_name:      d.deal_name,
+    pipeline_stage: d.pipeline_stage,
+    probability:    d.probability,
+    status:         d.status,
+    created_date,
+    country:        d.country_text_cus_3879905       || null,
+    state:          d.state_cus_530951                || null,
+    trip_purpose:   d.villa_service_text_cus_2990224  || null,
+    traffic_source: d.webfx_source_cus_3854211 ? d.webfx_source_cus_3854211.toLowerCase() : null,
+    traffic_medium: d.webfx_medium_cus_3854212 ? d.webfx_medium_cus_3854212.toLowerCase() : null,
+    guests:         d.overnight_guests_cus_79048      || null,
+    check_in,
+    revenue,
+    client_name:    d.client_first_name_cus_3057208   || null,
+    survey_overall:      d.survey_overall_satisfaction_cus_3858473 || null,
+    survey_pre_arrival:  d.survey_pre_arrival_cus_3858474          || null,
+    survey_manager:      d.survey_villa_manager_cus_3858475        || null,
+    survey_rooms:        d.survey_accommodations_cus_3858476       || null,
+    survey_housekeeping: d.survey_housekeeping_cus_3858477         || null,
+    survey_breakfast:    d.survey_breakfast_cus_3858478            || null,
+    survey_experience:   d.survey_overall_experience_cus_3858479   || null,
+  };
+}
+
+
+// ─── loading overlay ───────────────────────────────────
+function showLoading(msg) {
+  let el = document.getElementById('loadingOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(5,8,15,.75);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(3px)';
+    const spinner = document.createElement('div');
+    spinner.id = 'loadSpinner';
+    spinner.style.cssText = 'font-size:36px;animation:spin360 .9s linear infinite';
+    spinner.textContent = '↻';
+    const msgEl = document.createElement('div');
+    msgEl.id = 'loadMsg';
+    msgEl.style.cssText = 'font-family:DM Mono,monospace;font-size:12px;color:#C8A45E;margin-top:16px;letter-spacing:.15em';
+    const countEl = document.createElement('div');
+    countEl.id = 'loadCount';
+    countEl.style.cssText = 'font-family:DM Mono,monospace;font-size:10px;color:#5C7294;margin-top:6px';
+    el.appendChild(spinner);
+    el.appendChild(msgEl);
+    el.appendChild(countEl);
+    document.body.appendChild(el);
+  }
+  document.getElementById('loadMsg').textContent = msg || 'FETCHING FROM SUPABASE…';
+  document.getElementById('loadCount').textContent = '';
+  el.style.display = 'flex';
+}
+function updateLoadingCount(n) {
+  const el = document.getElementById('loadCount');
+  if (el) el.textContent = `${n} records loaded`;
+}
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.style.display = 'none';
+}
+
+// ─── main load/refresh ─────────────────────────────────
+let RAW_DEALS = [];
+
+// ═══════════════════════════════════════════════════════
+// PERIOD LOGIC
+// ═══════════════════════════════════════════════════════
+let currentPeriod = 'all';
+let filteredDeals = [...RAW_DEALS];
+
+function getPeriodDates(key) {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const dow = now.getDay(); // 0=Sun
+  const mondayOffset = (dow === 0) ? 6 : dow - 1;
+
+  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - mondayOffset); startOfWeek.setHours(0,0,0,0);
+  const startOfMonth = new Date(y, m, 1);
+  const startOfYear = new Date(y, 0, 1);
+  const quarter = Math.floor(m / 3);
+  const startOfQuarter = new Date(y, quarter * 3, 1);
+
+  const d = (dt) => dt.toISOString().slice(0,10);
+
+  const map = {
+    all:          {from:'2000-01-01', to:'2099-12-31', label:'All Records'},
+    thisweek:     {from:d(startOfWeek), to:d(now), label:'This Week'},
+    lastweek:     {from:d(new Date(startOfWeek.getTime()-7*86400000)), to:d(new Date(startOfWeek.getTime()-1)), label:'Last Week'},
+    thismonth:    {from:d(startOfMonth), to:d(now), label:'This Month'},
+    lastmonth:    {from:d(new Date(y,m-1,1)), to:d(new Date(y,m,0)), label:'Last Month'},
+    thisquarter:  {from:d(startOfQuarter), to:d(now), label:'This Quarter'},
+    lastquarter:  {from:d(new Date(y, (quarter-1)*3, 1)), to:d(new Date(y, quarter*3, 0)), label:'Last Quarter'},
+    thisyear:     {from:d(startOfYear), to:d(now), label:'This Year'},
+    lastyear:     {from:d(new Date(y-1,0,1)), to:d(new Date(y-1,11,31)), label:'Last Year'},
+  };
+  return map[key] || map.all;
+}
+
+function setPeriod(key) {
+  currentPeriod = key;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  // find the button that matches the key by its onclick
+  document.querySelectorAll('.period-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+key+"'")) b.classList.add('active');
+  });
+  const {from, to, label} = getPeriodDates(key);
+  document.getElementById('periodLabel').textContent = label;
+  filteredDeals = RAW_DEALS.filter(d => d.created_date >= from && d.created_date <= to);
+  refreshAllCharts();
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART INSTANCES
+// ═══════════════════════════════════════════════════════
+let charts = {};
+const C = {gold:'#C8A45E',teal:'#2CC4C4',green:'#2ECC8A',red:'#E05C5C',amber:'#F5A623',purple:'#9B7EF8',blue:'#4B9EF5',dim:'#5C7294'};
+const TT = {background:'#0A1018',border:'1px solid #1A2840',borderRadius:8,padding:'8px 14px',color:'#ECF0F8',font:{size:12}};
+const GRID = 'rgba(26,40,64,.7)';
+
+function mkChart(id, config) {
+  if(charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if(!ctx) return null;
+  charts[id] = new Chart(ctx.getContext('2d'), config);
+  return charts[id];
+}
+
+// ═══════════════════════════════════════════════════════
+// COMPUTE STATS FROM FILTERED DEALS
+// ═══════════════════════════════════════════════════════
+function normalizeSource(d) {
+  const s = d.traffic_source || '';
+  const m = d.traffic_medium || '';
+  if (s === 'google') return m === 'organic' ? 'Google Organic' : 'Google Paid';
+  if (s === 'chatgpt.com') return 'ChatGPT';
+  if (s === 'fb' || s === 'facebook') return 'Facebook Paid';
+  if (s === 'ig') return 'Instagram';
+  if (s === 'pinterest') return 'Pinterest';
+  if (s.includes('weddingwire')) return 'WeddingWire';
+  if (s === 'direct') return 'Direct';
+  return s;
+}
+
+function computeStats(deals) {
+  const total = deals.length;
+  const won   = deals.filter(d=>d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay').length;
+  const lost  = deals.filter(d=>d.pipeline_stage==='Lost').length;
+  const active= total - won - lost;
+  const revenue = deals.reduce((s,d)=>s+(d.revenue||0),0);
+  const wonDeals = deals.filter(d=>d.revenue>0);
+  const avgTicket = wonDeals.length ? revenue/wonDeals.length : 0;
+
+  // Stages
+  const stages = {};
+  deals.forEach(d=>{
+    const s=d.pipeline_stage||'Unknown';
+    if(!stages[s]) stages[s]={stage:s,count:0,revenue:0};
+    stages[s].count++; stages[s].revenue+=(d.revenue||0);
+  });
+
+  // Purpose
+  const purposes = {};
+  deals.forEach(d=>{
+    let p=(d.trip_purpose||'').trim().replace(/^WEDDING$/i,'Wedding');
+    if(!p) return;
+    purposes[p]=(purposes[p]||0)+1;
+  });
+
+  // Traffic (channel) — normalize to same labels as normalizeSource()
+  const traffic = {};
+  deals.forEach(d=>{
+    if(!d.traffic_source) return;
+    const label = normalizeSource(d);
+    if(!traffic[label]) traffic[label]={label, src:d.traffic_source, leads:0,won:0,revenue:0};
+    traffic[label].leads++;
+    if(d.pipeline_stage==='Won'){traffic[label].won++;traffic[label].revenue+=(d.revenue||0);}
+  });
+
+  // Country
+  const countries = {};
+  deals.forEach(d=>{
+    const c=d.country||'Unknown';
+    if(!countries[c]) countries[c]={country:c,leads:0,won:0,lost:0,revenue:0};
+    countries[c].leads++;
+    if(d.pipeline_stage==='Won'){countries[c].won++;countries[c].revenue+=(d.revenue||0);}
+    if(d.pipeline_stage==='Lost') countries[c].lost++;
+  });
+
+  // US States
+  const states = {};
+  deals.filter(d=>d.state&&d.country==='United States').forEach(d=>{
+    states[d.state]=(states[d.state]||0)+1;
+  });
+
+  // Monthly — computed from filtered deals
+  const months={};
+  deals.forEach(d=>{
+    const dt=new Date(d.created_date);
+    const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const lbl=dt.toLocaleString('en',{month:'short',year:'2-digit'});
+    if(!months[k]) months[k]={k,month:lbl,leads:0,won:0,lost:0,revenue:0};
+    months[k].leads++;
+    if(d.pipeline_stage==='Won'){months[k].won++;months[k].revenue+=(d.revenue||0);}
+    if(d.pipeline_stage==='Lost') months[k].lost++;
+  });
+
+  return {total,won,lost,active,revenue,avgTicket,stages,purposes,traffic,countries,states,months};
+}
+
+// ═══════════════════════════════════════════════════════
+// REFRESH ALL
+// ═══════════════════════════════════════════════════════
+function refreshAllCharts() {
+  const s = computeStats(filteredDeals);
+  updateKPIs(s);
+
+  const activeTab = document.querySelector('.main-tab.active')?.id?.replace('tab-','') || 'overview';
+
+  const safeRender = (name, fn) => {
+    try { fn(); } catch(e) { console.warn('Render error [' + name + ']:', e.message); }
+  };
+
+  if (activeTab === 'overview') {
+    safeRender('monthly',  () => renderMonthly(s));
+    safeRender('purpose',  () => renderPurpose(s));
+    safeRender('checkin',  () => renderCheckin());
+  }
+  if (activeTab === 'pipeline')     safeRender('pipeline',  () => renderPipeline(s));
+  if (activeTab === 'traffic')      safeRender('traffic',   () => renderTraffic(s));
+  if (activeTab === 'geography')    safeRender('geography', () => renderGeography(s));
+  if (activeTab === 'satisfaction') safeRender('survey',    () => renderSatisfaction());
+
+  // Also render non-chart DOM for inactive tabs (funnel, channel cards, etc.)
+  if (activeTab !== 'pipeline')     safeRender('pipeline-bg',  () => renderPipeline(s));
+  if (activeTab !== 'traffic')      safeRender('traffic-bg',   () => renderTraffic(s));
+  if (activeTab !== 'geography')    safeRender('geography-bg', () => renderGeography(s));
+  if (activeTab !== 'satisfaction') safeRender('survey-bg',    () => renderSatisfaction());
+
+  document.getElementById('footerRight').textContent =
+    `${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} deals · ${new Date().toLocaleDateString('en')}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// KPIs
+// ═══════════════════════════════════════════════════════
+function fmt$(n){return n>=1000000?`$${(n/1000000).toFixed(1)}M`:n>=1000?`$${(n/1000).toFixed(0)}k`:`$${n.toFixed(0)}`}
+
+function updateKPIs(s) {
+  document.getElementById('kRevenue').textContent = fmt$(s.revenue);
+  document.getElementById('kRevenueSub').textContent = `${s.won} deals closed`;
+  document.getElementById('kWon').textContent = s.won;
+  document.getElementById('kWonSub').innerHTML = `<b>${s.total?Math.round(s.won/s.total*100):0}%</b> conv. rate`;
+  document.getElementById('kLost').textContent = s.lost;
+  document.getElementById('kLostSub').innerHTML = `<b>${s.total?Math.round(s.lost/s.total*100):0}%</b> loss rate`;
+  document.getElementById('kActive').textContent = s.active;
+  document.getElementById('kActiveSub').textContent = `${s.total?Math.round(s.active/s.total*100):0}% of total`;
+  document.getElementById('kTicket').textContent = fmt$(s.avgTicket);
+  document.getElementById('kTotal').textContent = s.total;
+  document.getElementById('kTotalSub').textContent = getPeriodDates(currentPeriod).label;
+  document.getElementById('headerSub').textContent = `vw_deals_dashboard · ${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} records`;
+}
+
+// ═══════════════════════════════════════════════════════
+// MONTHLY CHART
+// ═══════════════════════════════════════════════════════
+function renderMonthly(s) {
+  const months = Object.values(s.months).sort((a,b)=>a.k.localeCompare(b.k));
+  const data = months;
+  // Store month keys alongside labels for drill-down
+  const monthKeys = data.map(m => m.k);
+  mkChart('monthlyChart',{
+    data:{labels,datasets:[
+      {type:'bar',label:'Leads',data:data.map(m=>m.leads),backgroundColor:'rgba(44,196,196,.2)',borderColor:'rgba(44,196,196,.45)',borderWidth:1,borderRadius:4,yAxisID:'y'},
+      {type:'bar',label:'Won',data:data.map(m=>m.won),backgroundColor:'rgba(46,204,138,.5)',borderColor:'rgba(46,204,138,.8)',borderWidth:1,borderRadius:4,yAxisID:'y'},
+      {type:'line',label:'Revenue',data:data.map(m=>m.revenue),borderColor:C.gold,borderWidth:2.5,pointBackgroundColor:C.gold,pointRadius:3,tension:.4,yAxisID:'y2',fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const idx = els[0].index;
+        const key = monthKeys[idx];
+        const lbl = labels[idx];
+        const deals = filteredDeals.filter(d => {
+          if (!d.created_date) return false;
+          return d.created_date.slice(0,7) === key;
+        });
+        showDrill(`Month: ${lbl}`, `${deals.length} deals`, deals);
+      },
+      plugins:{legend:{labels:{color:C.dim,font:{size:10,family:'DM Mono'},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='Revenue'?`Revenue: ${fmt$(ctx.parsed.y)}`:`${ctx.dataset.label}: ${ctx.parsed.y}`}}},
+      scales:{y:{position:'left',grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y2:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.gold,font:{size:10},callback:v=>v?`${fmt$(v)}`:''}},x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// PURPOSE DONUT
+// ═══════════════════════════════════════════════════════
+const PIE_COLORS = [C.gold,C.teal,C.purple,C.green,C.red,C.amber,C.blue];
+function renderPurpose(s) {
+  const entries = Object.entries(s.purposes).sort((a,b)=>b[1]-a[1]);
+  const labels = entries.map(e=>e[0]), vals=entries.map(e=>e[1]);
+  mkChart('purposeChart',{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:PIE_COLORS,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const lbl = labels[els[0].index];
+        drillByPurpose(lbl);
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}}}});
+  const el=document.getElementById('purposeLegend'); el.innerHTML='';
+  entries.slice(0,5).forEach(([name,val],i)=>{
+    el.innerHTML+=`<div class="donut-row" onclick="drillByPurpose('${name}')"><div class="donut-dot" style="background:${PIE_COLORS[i]}"></div><span class="donut-lbl">${name}</span><span class="donut-val">${val}</span></div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHECK-IN DEMAND (computed from live data)
+// ═══════════════════════════════════════════════════════
+function renderCheckin() {
+  // Aggregate check_in dates from all deals (not period-filtered — show full future demand)
+  const buckets = {};
+  RAW_DEALS.forEach(d => {
+    if (!d.check_in) return;
+    const dt = new Date(d.check_in);
+    if (isNaN(dt)) return;
+    const y = dt.getFullYear(), m = dt.getMonth();
+    // Only show future/upcoming: from 2025 onwards
+    if (y < 2025) return;
+    const key = `${y}-${String(m+1).padStart(2,'0')}`;
+    const lbl = dt.toLocaleString('en',{month:'short',year:'2-digit'});
+    if (!buckets[key]) buckets[key] = {key, lbl, requested:0, confirmed:0};
+    buckets[key].requested++;
+    if (d.pipeline_stage === 'Won') buckets[key].confirmed++;
+  });
+  const data = Object.values(buckets).sort((a,b) => a.key.localeCompare(b.key));
+  if (!data.length) return;
+
+  mkChart('checkinChart',{type:'bar',data:{labels:data.map(d=>d.lbl),datasets:[
+    {label:'Requested',data:data.map(d=>d.requested),backgroundColor:'rgba(75,158,245,.3)',borderColor:'rgba(75,158,245,.6)',borderWidth:1,borderRadius:4},
+    {label:'Confirmed',data:data.map(d=>d.confirmed),backgroundColor:'rgba(46,204,138,.65)',borderColor:'rgba(46,204,138,.9)',borderWidth:1,borderRadius:4},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    onClick:(evt, els) => {
+      if (!els.length) return;
+      const idx = els[0].index;
+      const key = data[idx].key;
+      const lbl = data[idx].lbl;
+      const deals = RAW_DEALS.filter(d => d.check_in && d.check_in.slice(0,7) === key);
+      showDrill(`Check-in: ${lbl}`, `${deals.length} deals`, deals);
+    },
+    plugins:{legend:{labels:{color:C.dim,font:{size:9,family:'DM Mono'},boxWidth:8}}},
+    scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:8},maxRotation:45}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:9}}}}}});
+}
+
+// ═══════════════════════════════════════════════════════
+// PIPELINE
+// ═══════════════════════════════════════════════════════
+const STAGE_COLORS={'Cold +Tel.':C.teal,'Lost':C.red,'Won':'#2ECC8A','Proposal':C.gold,'Negotiation':C.purple,'Warm':C.amber,'Active Nurturing':'#34D399','Passive Nurturing':C.dim,'NEW LEAD':C.blue,'Close/Proposal Signed':'#4ADE80','Won Complimentary Stay':'#A3E635'};
+
+function renderPipeline(s) {
+  const stages = Object.values(s.stages).sort((a,b)=>b.count-a.count);
+  const maxN = stages[0]?.count||1;
+  const el=document.getElementById('funnelEl'); el.innerHTML='';
+  stages.forEach(st=>{
+    const pct=Math.round(st.count/maxN*100);
+    const col=STAGE_COLORS[st.stage]||C.dim;
+    el.innerHTML+=`<div class="funnel-row" onclick="drillStage('${st.stage}')">
+      <div class="funnel-label">${st.stage}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${col}20;border-left:3px solid ${col}"></div></div>
+      <div class="funnel-n" style="color:${col}">${st.count}</div>
+    </div>`;
+  });
+  document.getElementById('pipelineBadge').textContent = `${filteredDeals.length} deals`;
+
+  // Health
+  const total=s.total||1;
+  const lossRate=Math.round(s.lost/total*100);
+  const convRate=Math.round(s.won/total*100);
+  const coldCount=s.stages['Cold +Tel.']?.count||0;
+  const coldPct=Math.round(coldCount/total*100);
+  document.getElementById('pipelineHealth').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--red)"><div style="color:var(--red);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${lossRate}%</div><div style="font-size:12px;color:var(--text);margin-top:2px">Loss Rate</div><div style="font-size:10px;color:var(--dim)">${s.lost} deals lost</div></div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--green)"><div style="color:var(--green);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${convRate}%</div><div style="font-size:12px;color:var(--text);margin-top:2px">Conversion Rate</div><div style="font-size:10px;color:var(--dim)">${s.won} deals Won</div></div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--amber)"><div style="color:var(--amber);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${coldPct}%</div><div style="font-size:12px;color:var(--text);margin-top:2px">Cold Pipeline</div><div style="font-size:10px;color:var(--dim)">${coldCount} in Cold+Tel.</div></div>
+    </div>`;
+
+  // Villa performance — computed from filtered deals
+  const villaStats = {};
+  const villaKeys = [
+    {key:'both',   label:'Both Villas',         col:C.gold,   match: n => /BOTH VILLAS/i.test(n) || /DUAL VILLA/i.test(n)},
+    {key:'pdv',    label:'Villa Punto de Vista', col:C.teal,   match: n => /PUNTO DE VISTA/i.test(n) && !/LA ISLA/i.test(n) && !/BOTH/i.test(n)},
+    {key:'isla',   label:'Villa La Isla',        col:C.purple, match: n => /LA ISLA/i.test(n) && !/BOTH/i.test(n)},
+  ];
+  villaKeys.forEach(v => { villaStats[v.key] = {label:v.label,col:v.col,deals:0,revenue:0,won:0}; });
+  filteredDeals.forEach(d => {
+    villaKeys.forEach(v => {
+      if (v.match(d.deal_name||'')) {
+        villaStats[v.key].deals++;
+        if (d.pipeline_stage==='Won') { villaStats[v.key].won++; villaStats[v.key].revenue+=(d.revenue||0); }
+      }
+    });
+  });
+  document.getElementById('villaList').innerHTML = villaKeys.map(v => {
+    const st = villaStats[v.key];
+    return `<div class="metric-item" style="border-left:3px solid ${v.col}" onclick="drillVilla('${v.label}')">
+      <div><div class="metric-name">${v.label}</div>
+      <div class="metric-detail">${st.deals} leads · ${st.won} won</div></div>
+      <div class="metric-big" style="color:${v.col}">${st.revenue>0?fmt$(st.revenue):'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// TRAFFIC
+// ═══════════════════════════════════════════════════════
+function renderTraffic(s) {
+  const trafficArr = Object.values(s.traffic).sort((a,b)=>b.leads-a.leads);
+  const disp = trafficArr;
+  const top6 = trafficArr.slice(0, 6);
+
+  // Channel cards (top 6)
+  const el=document.getElementById('channelCards'); el.innerHTML='';
+  const colArr=[C.gold,C.teal,C.purple,C.green,C.amber,C.blue];
+  top6.forEach((ch,i)=>{
+    const conv=ch.leads?Math.round(ch.won/ch.leads*100):0;
+    el.innerHTML+=`<div class="channel-card" onclick="drillChannel('${ch.src||ch.label}')">
+      <div class="channel-name">${ch.label}</div>
+      <div class="channel-leads" style="color:${colArr[i]}">${ch.leads}</div>
+      <div class="channel-meta"><span>${ch.won} Won</span><span class="channel-conv">${conv}% conv.</span>${ch.revenue>0?`<span>${fmt$(ch.revenue)}</span>`:''}</div>
+    </div>`;
+  });
+
+  // Traffic bar chart
+  mkChart('trafficChart',{type:'bar',data:{labels:disp.map(t=>t.label),datasets:[{data:disp.map(t=>t.leads),backgroundColor:colArr.map((c,i)=>i<disp.length?c+'bb':'#334466'),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const t = disp[els[0].index];
+        drillChannel(t.src || t.label);
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x} leads`}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{display:false},ticks:{color:'#ECF0F8',font:{size:11}}}}}});
+
+  // Channel mix bars
+  const total=disp.reduce((s,t)=>s+t.leads,0)||1;
+  document.getElementById('channelMix').innerHTML=disp.slice(0,8).map((t,i)=>`
+    <div class="prog-row" onclick="drillChannel('${t.src||t.label}')">
+      <div class="prog-head"><span style="font-size:11px">${t.label}</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:${colArr[i%6]}">${t.leads} <span style="color:var(--dim)">(${Math.round(t.leads/total*100)}%)</span></span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${t.leads/total*100}%;background:${colArr[i%6]}"></div></div>
+    </div>`).join('');
+
+  // Revenue by source
+  const revData = disp.filter(t=>t.revenue>0);
+  mkChart('revenueSourceChart',{type:'bar',data:{labels:revData.map(t=>t.label),datasets:[{data:revData.map(t=>t.revenue),backgroundColor:colArr,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const t = revData[els[0].index];
+        const deals = filteredDeals.filter(d=>d.revenue>0 && d.traffic_source && normalizeSource(d)===t.label);
+        showDrill(`Revenue: ${t.label}`, `${deals.length} Won deals`, deals);
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt$(ctx.parsed.y)}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10},callback:v=>fmt$(v)}}}}});
+
+  // Purpose × source stacked
+  const purposeSourceData = {};
+  filteredDeals.filter(d=>d.trip_purpose&&d.traffic_source).forEach(d=>{
+    let p=d.trip_purpose.trim().replace(/^WEDDING$/i,'Wedding');
+    let src=d.traffic_source==='google'?(d.traffic_medium==='organic'?'Google Organic':'Google Paid'):d.traffic_source==='chatgpt.com'?'ChatGPT':d.traffic_source;
+    if(!purposeSourceData[p]) purposeSourceData[p]={};
+    purposeSourceData[p][src]=(purposeSourceData[p][src]||0)+1;
+  });
+  const purposes=Object.keys(purposeSourceData).slice(0,5);
+  const sources=[...new Set(filteredDeals.filter(d=>d.traffic_source).map(d=>d.traffic_source==='google'?(d.traffic_medium==='organic'?'Google Organic':'Google Paid'):d.traffic_source==='chatgpt.com'?'ChatGPT':d.traffic_source))];
+  mkChart('purposeSourceChart',{type:'bar',data:{labels:purposes,datasets:sources.slice(0,5).map((src,i)=>({label:src,data:purposes.map(p=>purposeSourceData[p][src]||0),backgroundColor:colArr[i]+'99',borderRadius:3}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const purpose = purposes[els[0].index];
+        const src = sources[els[0].datasetIndex];
+        const deals = filteredDeals.filter(d => {
+          const p = (d.trip_purpose||'').replace(/^WEDDING$/i,'Wedding');
+          const s = normalizeSource(d);
+          return p === purpose && (src ? s === src : true);
+        });
+        showDrill(`${purpose} · ${src||'All Sources'}`, `${deals.length} deals`, deals);
+      },
+      plugins:{legend:{labels:{color:C.dim,font:{size:9,family:'DM Mono'},boxWidth:8}}},
+      scales:{x:{stacked:true,grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{stacked:true,grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}});
+}
+
+// ═══════════════════════════════════════════════════════
+// GEOGRAPHY
+// ═══════════════════════════════════════════════════════
+const FLAGS={'United States':'🇺🇸','Venezuela':'🇻🇪','Canada':'🇨🇦','Mexico':'🇲🇽','Costa Rica':'🇨🇷','Panama':'🇵🇦','Bermuda':'🇧🇲','Puerto Rico':'🇵🇷'};
+
+function renderGeography(s) {
+  const countries = Object.values(s.countries).filter(c=>c.country!=='Unknown').sort((a,b)=>b.leads-a.leads);
+  const usStates = Object.entries(s.states).sort((a,b)=>b[1]-a[1]);
+
+  // Country bar chart
+  mkChart('countryChart',{type:'bar',data:{labels:countries.slice(0,8).map(c=>c.country),datasets:[
+    {label:'Total',data:countries.slice(0,8).map(c=>c.leads),backgroundColor:C.teal+'66',borderColor:C.teal+'99',borderWidth:1,borderRadius:3},
+    {label:'Won',data:countries.slice(0,8).map(c=>c.won),backgroundColor:C.green+'88',borderColor:C.green,borderWidth:1,borderRadius:3},
+    {label:'Lost',data:countries.slice(0,8).map(c=>c.lost),backgroundColor:C.red+'66',borderColor:C.red+'99',borderWidth:1,borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    onClick:(evt, els) => {
+      if (!els.length) return;
+      const country = countries[els[0].index]?.country;
+      if (country) drillCountryDrill(country);
+    },
+    plugins:{legend:{labels:{color:C.dim,font:{size:10,family:'DM Mono'},boxWidth:9}}},
+    scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}});
+
+  // Pills
+  const pills=document.getElementById('countryPills'); pills.innerHTML='';
+  countries.slice(0,6).forEach((c,i)=>{
+    const col=[C.teal,C.purple,C.blue,C.green,C.red,C.amber][i];
+    pills.innerHTML+=`<div class="geo-pill" onclick="drillCountryDrill('${c.country}')">
+      <div class="geo-flag">${FLAGS[c.country]||'🌎'}</div>
+      <div class="geo-n" style="color:${col}">${c.leads}</div>
+      <div class="geo-name">${c.country}</div>
+      ${c.revenue>0?`<div class="geo-rev" style="color:${C.gold}">${fmt$(c.revenue)}</div>`:''}
+    </div>`;
+  });
+
+  // States progress
+  const stEl=document.getElementById('statesList'); stEl.innerHTML='';
+  const maxSt=usStates[0]?.[1]||1;
+  const stColors=[C.gold,C.teal,C.purple,C.blue,C.green,C.amber,C.red,C.dim];
+  usStates.slice(0,8).forEach(([state,n],i)=>{
+    stEl.innerHTML+=`<div class="prog-row" onclick="drillByState('${state}')">
+      <div class="prog-head"><span style="font-size:11px">${state}</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:${stColors[i]}">${n}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${n/maxSt*100}%;background:${stColors[i]}"></div></div>
+    </div>`;
+  });
+
+  // States bar chart
+  mkChart('statesChart',{type:'bar',data:{labels:usStates.slice(0,10).map(s=>s[0]),datasets:[{data:usStates.slice(0,10).map(s=>s[1]),backgroundColor:stColors.map(c=>c+'aa'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const state = usStates[els[0].index]?.[0];
+        if (state) drillByState(state);
+      },
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:9},maxRotation:40}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}});
+
+  // Country conversion
+  const ccEl=document.getElementById('countryConv'); ccEl.innerHTML='';
+  countries.slice(0,6).forEach((c,i)=>{
+    const conv=c.leads?Math.round(c.won/c.leads*100):0;
+    const col=conv>20?C.green:conv>5?C.amber:C.red;
+    ccEl.innerHTML+=`<div style="background:var(--s2);border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--bd);display:flex;gap:12px;align-items:center;cursor:pointer" onclick="drillCountryDrill('${c.country}')">
+      <div style="font-size:18px">${FLAGS[c.country]||'🌎'}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${c.country}</div>
+        <div style="font-size:10px;color:var(--dim)">${c.leads} leads · ${c.won} won · ${c.lost} lost</div></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:${col}">${conv}%</div>
+    </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SATISFACTION
+// ═══════════════════════════════════════════════════════
+function renderSatisfaction() {
+  // Build survey records from live RAW_DEALS
+  const surveyDeals = RAW_DEALS.filter(d =>
+    d.survey_overall || d.survey_pre_arrival || d.survey_manager
+  ).map(d => ({
+    deal_name: d.deal_name,
+    client:    d.client_name || '—',
+    check_in:  d.check_in   || '—',
+    overall_satisfaction: parseFloat(d.survey_overall)      || null,
+    pre_arrival:          parseFloat(d.survey_pre_arrival)  || null,
+    villa_manager:        parseFloat(d.survey_manager)      || null,
+    accommodations:       parseFloat(d.survey_rooms)        || null,
+    housekeeping:         parseFloat(d.survey_housekeeping) || null,
+    breakfast:            parseFloat(d.survey_breakfast)    || null,
+    overall_experience:   parseFloat(d.survey_experience)   || null,
+  }));
+
+  const categories=[
+    {key:'overall_satisfaction', label:'Overall Customer Service'},
+    {key:'pre_arrival',          label:'Pre-Arrival Concierge'},
+    {key:'villa_manager',        label:'Villa Manager'},
+    {key:'accommodations',       label:'Accommodations'},
+    {key:'housekeeping',         label:'Housekeeping'},
+    {key:'breakfast',            label:'Breakfast & Morning Service'},
+    {key:'overall_experience',   label:'Overall Villa Experience'},
+  ];
+  const el=document.getElementById('surveyScores'); el.innerHTML='';
+  categories.forEach(c=>{
+    const scores=surveyDeals.map(d=>d[c.key]).filter(n=>n!==null&&!isNaN(n));
+    const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
+    const pct=avg/5*100;
+    const stars='⭐'.repeat(Math.round(avg));
+    el.innerHTML+=`<div class="stars-row">
+      <div class="stars-label">${c.label}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex:0 0 200px">
+        <div class="stars-bar-wrap"><div class="stars-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="stars-val">${avg>0?avg.toFixed(1):'—'}</div>
+      <div class="star-emoji">${stars}</div>
+    </div>`;
+  });
+
+  const avgAll=surveyDeals.length?categories.reduce((sum,c)=>{
+    const scores=surveyDeals.map(d=>d[c.key]).filter(n=>n!==null&&!isNaN(n));
+    return sum+(scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0);
+  },0)/categories.length:0;
+
+  document.getElementById('surveyOverview').innerHTML=`
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:600;color:var(--gold);line-height:1">${avgAll>0?avgAll.toFixed(1):'—'}</div>
+      <div style="font-size:24px;margin:6px 0">${avgAll>=4?'⭐⭐⭐⭐⭐':avgAll>=3?'⭐⭐⭐⭐':'⭐⭐⭐'}</div>
+      <div style="font-size:11px;color:var(--dim);font-family:'DM Mono',monospace">OVERALL SCORE</div>
+      <div style="margin-top:16px;font-size:11px;color:var(--dim)">${surveyDeals.length} survey response${surveyDeals.length!==1?'s':''}</div>
+      <div style="margin-top:4px;font-size:10px;color:var(--dim2)">Live from PipelineCRM via Supabase</div>
+    </div>`;
+
+  mkChart('surveyRadar',{type:'radar',data:{labels:categories.map(c=>c.label.split(' ').slice(0,2).join(' ')),
+    datasets:[{label:'Avg Score',data:categories.map(c=>{
+      const sc=surveyDeals.map(d=>d[c.key]).filter(n=>n!==null&&!isNaN(n));
+      return sc.length?sc.reduce((a,b)=>a+b,0)/sc.length:0;
+    }),backgroundColor:'rgba(200,164,94,.15)',borderColor:C.gold,borderWidth:2,pointBackgroundColor:C.gold,pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{color:C.dim,font:{size:9},stepSize:1},grid:{color:GRID},pointLabels:{color:C.dim,font:{size:9}},angleLines:{color:GRID}}},plugins:{legend:{display:false}}}});
+
+  document.getElementById('surveyRecords').innerHTML=surveyDeals.length
+    ? surveyDeals.map(d=>`
+    <div style="background:var(--s2);border-radius:10px;padding:14px;border:1px solid var(--bd);margin-bottom:8px">
+      <div style="font-size:12px;font-weight:500;color:var(--text)">${d.deal_name}</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:3px">Client: ${d.client} · Check-in: ${d.check_in}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${[['Overall',d.overall_satisfaction],['Pre-Arrival',d.pre_arrival],['Villa Mgr',d.villa_manager],['Rooms',d.accommodations],['Staff',d.housekeeping],['Breakfast',d.breakfast],['Experience',d.overall_experience]]
+          .map(([l,v])=>`<span style="background:var(--s3);border-radius:4px;padding:2px 7px;font-size:10px;color:${v>=4?C.gold:C.dim}">${l}: ${v!=null?v+'⭐':'—'}</span>`).join('')}
+      </div>
+    </div>`).join('')
+    : `<div style="text-align:center;padding:30px;color:var(--dim);font-size:12px">Survey responses will appear as data syncs from PipelineCRM</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// DRILL-DOWN MODAL
+// ═══════════════════════════════════════════════════════
+function showDrill(title, sub, deals) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub;
+  const head=document.getElementById('drillHead');
+  const body=document.getElementById('drillBody');
+  head.innerHTML=`<tr><th>Deal Name</th><th>Stage</th><th>Country</th><th>Purpose</th><th>Source</th><th>Check-in</th><th>Revenue</th><th>Created</th></tr>`;
+  body.innerHTML=deals.map(d=>{
+    const sc={'Won':'#2ECC8A','Lost':'#E05C5C','Proposal':'#C8A45E','Negotiation':'#9B7EF8','Warm':'#F5A623','Cold +Tel.':'#2CC4C4'}[d.pipeline_stage]||'#5C7294';
+    return `<tr>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.deal_name}">${d.deal_name}</td>
+      <td><span class="stage-badge" style="background:${sc}22;color:${sc}">${d.pipeline_stage||'—'}</span></td>
+      <td>${d.country||'—'}</td>
+      <td>${d.trip_purpose||'—'}</td>
+      <td>${d.traffic_source||'—'}</td>
+      <td>${d.check_in||'—'}</td>
+      <td style="color:${d.revenue?C.gold:C.dim}">${d.revenue?fmt$(d.revenue):'—'}</td>
+      <td style="color:var(--dim)">${d.created_date}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('modalCount').textContent = `${deals.length} record${deals.length!==1?'s':''} shown`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if(!e || e.target===document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.remove('open');
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+// Drill functions
+// ═══════════════════════════════════════════════════════
+// DRILL-DOWN HELPERS
+// ═══════════════════════════════════════════════════════
+function drillMonthly() { showDrill('All Deals','Selected period', filteredDeals.slice().sort((a,b)=>b.created_date.localeCompare(a.created_date))); }
+function drillPurpose() { showDrill('Visit Intent','Deals with purpose filled', filteredDeals.filter(d=>d.trip_purpose)); }
+function drillByPurpose(p) {
+  const norm = p.replace(/^WEDDING$/i,'Wedding');
+  const deals = filteredDeals.filter(d => (d.trip_purpose||'').replace(/^WEDDING$/i,'Wedding') === norm);
+  showDrill(`Purpose: ${norm}`, `${deals.length} deals`, deals);
+}
+function drillCheckin() { showDrill('Check-in Demand','All deals with check-in date', RAW_DEALS.filter(d=>d.check_in&&d.check_in>='2025-01-01').sort((a,b)=>a.check_in.localeCompare(b.check_in))); }
+function drillStage(stage) {
+  const deals = filteredDeals.filter(d=>d.pipeline_stage===stage);
+  showDrill(`Stage: ${stage}`, `${deals.length} deals`, deals);
+}
+function drillVilla(v) {
+  const kw = v.replace('Villa Punto de Vista','PUNTO DE VISTA').replace('Villa La Isla','LA ISLA').replace('Both Villas','BOTH VILLAS');
+  const deals = filteredDeals.filter(d => (d.deal_name||'').toUpperCase().includes(kw.toUpperCase()));
+  showDrill(`Villa: ${v}`, `${deals.length} deals`, deals);
+}
+function drillChannel(src) {
+  const deals = filteredDeals.filter(d => d.traffic_source && normalizeSource(d) === src);
+  showDrill(`Channel: ${src}`, `${deals.length} deals`, deals);
+}
+function drillTrafficChart() { showDrill('Traffic Source','Deals with traffic tracked', filteredDeals.filter(d=>d.traffic_source)); }
+function drillRevenueBySource() { showDrill('Revenue by Source','Won deals with revenue', filteredDeals.filter(d=>d.revenue>0&&d.traffic_source)); }
+function drillPurposeSource() { showDrill('Purpose × Source','Deals with both fields', filteredDeals.filter(d=>d.trip_purpose&&d.traffic_source)); }
+function drillCountry() { showDrill('By Country','Deals with country', filteredDeals.filter(d=>d.country).sort((a,b)=>(a.country||'').localeCompare(b.country||''))); }
+function drillCountryDrill(c) {
+  const deals = filteredDeals.filter(d=>d.country===c);
+  showDrill(`Country: ${c}`, `${deals.length} deals`, deals);
+}
+function drillStates() { showDrill('US States','US deals with state', filteredDeals.filter(d=>d.state&&d.country==='United States').sort((a,b)=>a.state.localeCompare(b.state))); }
+function drillByState(state) {
+  const deals = filteredDeals.filter(d=>d.state===state);
+  showDrill(`State: ${state}`, `${deals.length} deals`, deals);
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+
+  // Re-render charts for the active tab so they get correct dimensions
+  const s = computeStats(filteredDeals);
+  if (id === 'overview')      { renderMonthly(s); renderPurpose(s); renderCheckin(); }
+  if (id === 'pipeline')      { renderPipeline(s); }
+  if (id === 'traffic')       { renderTraffic(s); }
+  if (id === 'geography')     { renderGeography(s); }
+  if (id === 'satisfaction')  { renderSatisfaction(); }
+}
+
+async function doRefresh(btn) {
+  const icon = document.getElementById('refreshIcon');
+  if (icon) icon.style.animation = 'spin360 .8s linear infinite';
+  if (btn) btn.disabled = true;
+  showLoading('BUSCANDO DADOS DO SUPABASE…');
+  try {
+    RAW_DEALS = await fetchFromSupabase();
+    updateLoadingCount(RAW_DEALS.length);
+    showLoading('PROCESSANDO ' + RAW_DEALS.length + ' REGISTROS…');
+    const {from, to} = getPeriodDates(currentPeriod);
+    filteredDeals = RAW_DEALS.filter(d => d.created_date >= from && d.created_date <= to);
+    hideLoading();
+    try {
+      refreshAllCharts();
+    } catch(chartErr) {
+      console.error('Chart render error:', chartErr);
+      showError('Dados carregados (' + RAW_DEALS.length + ' registros) mas erro ao renderizar gráficos: ' + chartErr.message);
+    }
+    const now = new Date();
+    const tsEl = document.getElementById('lastRefreshed');
+    if (tsEl) tsEl.textContent =
+      'Last refreshed: ' + now.toLocaleTimeString('en', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) +
+      ' · ' + RAW_DEALS.length + ' records';
+  } catch(e) {
+    hideLoading();
+    showError('Erro ao carregar dados do Supabase: ' + e.message);
+    console.error(e);
+  } finally {
+    if (icon) icon.style.animation = '';
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('loadingOverlay') || document.createElement('div');
+  el.id = 'loadingOverlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(5,8,15,.9);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(3px)';
+  el.innerHTML = '<div style="font-size:36px">⚠️</div>' +
+    '<div style="font-family:DM Mono,monospace;font-size:13px;color:#E05C5C;margin-top:16px;letter-spacing:.1em;text-align:center;max-width:500px;padding:0 24px">' + msg + '</div>' +
+    '<button onclick="document.getElementById(\'loadingOverlay\').style.display=\'none\'" ' +
+    'style="margin-top:24px;background:rgba(200,164,94,.15);border:1px solid rgba(200,164,94,.4);color:#C8A45E;border-radius:8px;padding:8px 20px;cursor:pointer;font-family:DM Mono,monospace;font-size:11px">FECHAR</button>';
+  if (!document.getElementById('loadingOverlay')) document.body.appendChild(el);
+  el.style.display = 'flex';
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait for Chart.js to be available
+  const waitForChartJS = (retries) => {
+    if (typeof Chart !== 'undefined') {
+      doRefresh(null);
+    } else if (retries > 0) {
+      setTimeout(() => waitForChartJS(retries - 1), 200);
+    } else {
+      showError('Chart.js não carregou. Verifique sua conexão com a internet.');
+    }
+  };
+  waitForChartJS(10);
+});
+</script>
+</body>
+</html>
