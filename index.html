@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Villa Punto de Vista — Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300&family=DM+Mono:wght@300;400;500&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#05080F; --s1:#090E1A; --s2:#0D1525; --s3:#111C30;
+  --bd:#1A2840; --bd2:#243558; --bd3:#2D4470;
+  --gold:#C8A45E; --gold2:#E6C882; --gold3:#8B6830;
+  --teal:#2CC4C4; --green:#2ECC8A; --red:#E05C5C;
+  --amber:#F5A623; --purple:#9B7EF8; --blue:#4B9EF5;
+  --text:#ECF0F8; --dim:#5C7294; --dim2:#3A506E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1420px;margin:0 auto;padding:0 28px 60px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px;border-bottom:1px solid var(--bd);margin-bottom:0}
+.logo-area{display:flex;align-items:center;gap:16px}
+.logo-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(200,164,94,.25)}
+.logo-text .sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:3px}
+.logo-text .main{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text);letter-spacing:.03em}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(44,196,196,.08);border:1px solid rgba(44,196,196,.2);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.1em}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
+.period-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:10px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:100;margin:0 -28px}
+.period-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;margin-right:4px}
+.period-btn{background:var(--s2);border:1px solid var(--bd);color:var(--dim);border-radius:6px;padding:5px 11px;font-size:11px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.period-btn:hover{border-color:var(--gold);color:var(--gold)}
+.period-btn.active{background:rgba(200,164,94,.12);border-color:var(--gold);color:var(--gold);font-weight:500}
+.period-sep{width:1px;height:20px;background:var(--bd);margin:0 4px}
+.period-stat{font-family:'DM Mono',monospace;font-size:10px;margin-left:auto}
+.period-stat span{color:var(--dim)}
+.period-stat b{color:var(--teal)}
+.custom-range-bar{background:var(--s2);border-bottom:1px solid var(--bd);padding:8px 28px;display:none;align-items:center;gap:12px;flex-wrap:wrap;margin:0 -28px;position:sticky;top:43px;z-index:99}
+.custom-range-bar.open{display:flex}
+.date-input{background:var(--s3);border:1px solid var(--bd2);color:var(--text);border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:border-color .2s;color-scheme:dark}
+.date-input:hover,.date-input:focus{border-color:var(--gold);outline:none}
+.date-input::-webkit-calendar-picker-indicator{filter:invert(.6) sepia(1) saturate(2) hue-rotate(5deg);cursor:pointer;opacity:.7}
+.date-input::-webkit-calendar-picker-indicator:hover{opacity:1}
+.main-tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin-top:20px}
+.main-tab{background:none;border:none;color:var(--dim);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:12px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px}
+.main-tab:hover{color:var(--text)}
+.main-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-pane{display:none;padding-top:22px}
+.tab-pane.active{display:block}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s;cursor:default}
+.kpi:hover{border-color:var(--bd2);transform:translateY(-2px)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+.kpi-icon{font-size:18px;opacity:.2;position:absolute;top:14px;right:14px}
+.kpi-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;line-height:1}
+.kpi-sub{font-size:11px;color:var(--dim);margin-top:6px}
+.kpi-sub b{color:var(--accent)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.g4{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:16px;margin-bottom:16px}
+.g5{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:22px 24px;transition:border-color .3s}
+.card:hover{border-color:var(--bd2)}
+.card-title{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.badge{background:var(--s3);color:var(--dim);font-size:9px;border-radius:20px;padding:2px 9px;letter-spacing:.05em}
+.chart-wrap{position:relative;cursor:pointer}
+.chart-wrap::after{content:'click to drill down';position:absolute;bottom:6px;right:8px;font-family:'DM Mono',monospace;font-size:8px;color:var(--dim2);letter-spacing:.1em;opacity:0;transition:opacity .3s}
+.chart-wrap:hover::after{opacity:1}
+.funnel{display:flex;flex-direction:column;gap:7px}
+.funnel-row{display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .2s}
+.funnel-row:hover{background:var(--s2)}
+.funnel-label{font-size:11px;color:var(--text);width:160px;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:26px;background:var(--s2);border-radius:6px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:6px;border-left:3px solid}
+.funnel-n{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;width:36px;text-align:right;flex-shrink:0}
+.donut-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:3px 6px;transition:background .2s}
+.donut-row:hover{background:var(--s2)}
+.donut-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.donut-lbl{font-size:11.5px;color:var(--dim);flex:1}
+.donut-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text)}
+.metric-list{display:flex;flex-direction:column;gap:10px}
+.metric-item{background:var(--s2);border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd);cursor:pointer;transition:border-color .2s}
+.metric-item:hover{border-color:var(--bd3)}
+.metric-name{font-size:12px;font-weight:400;color:var(--text)}
+.metric-detail{font-size:10px;color:var(--dim);margin-top:2px}
+.metric-big{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+.prog-row{margin-bottom:11px;cursor:pointer}
+.prog-head{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11.5px}
+.prog-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+.geo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.geo-pill{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:11px 14px;text-align:center;cursor:pointer;transition:border-color .2s}
+.geo-pill:hover{border-color:var(--bd3)}
+.geo-flag{font-size:20px;margin-bottom:4px}
+.geo-n{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+.geo-name{font-size:9.5px;color:var(--dim)}
+.geo-rev{font-size:10px;margin-top:2px}
+.insight{background:var(--s2);border-radius:10px;padding:14px 16px;border-left:3px solid var(--c);margin-bottom:10px}
+.insight .i-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px}
+.insight .i-body{font-size:10.5px;color:var(--dim);line-height:1.55}
+.stars-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px 14px;background:var(--s2);border-radius:10px;border:1px solid var(--bd)}
+.stars-label{font-size:11px;color:var(--dim);flex:1}
+.stars-val{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-weight:600;width:36px;text-align:right}
+.stars-bar-wrap{width:100px;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.stars-fill{height:100%;background:var(--gold);border-radius:3px}
+.stars-count{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim2);width:40px;text-align:right}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,15,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:20px;width:100%;max-width:1100px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text)}
+.modal-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);margin-top:3px;letter-spacing:.1em}
+.modal-close{background:var(--s2);border:1px solid var(--bd);color:var(--dim);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{color:var(--text);border-color:var(--bd2)}
+.modal-body{overflow-y:auto;padding:0}
+.drill-table{width:100%;border-collapse:collapse}
+.drill-table th{background:var(--s2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:11px 16px;text-align:left;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--bd)}
+.drill-table td{padding:10px 16px;font-size:12px;border-bottom:1px solid rgba(26,40,64,.5);color:var(--text)}
+.drill-table tr:hover td{background:rgba(13,21,37,.6)}
+.drill-table tr:last-child td{border-bottom:none}
+.stage-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-family:'DM Mono',monospace}
+.modal-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);padding:10px 24px;border-top:1px solid var(--bd)}
+.channel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.channel-card{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s}
+.channel-card:hover{border-color:var(--bd3)}
+.channel-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px}
+.channel-leads{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:2px}
+.channel-meta{font-size:10px;color:var(--dim);display:flex;gap:10px}
+.channel-conv{color:var(--green)}
+footer{border-top:1px solid var(--bd);margin-top:32px;padding-top:16px;display:flex;justify-content:space-between;align-items:center}
+footer .f-left{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim2)}
+footer .f-right{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim2)}
+.fade-in{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}
+@media(max-width:900px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.g2,.g3,.g4,.g5{grid-template-columns:1fr}.span2,.span3{grid-column:span 1}.channel-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="fade-in">
+  <div class="logo-area">
+    <div class="logo-icon">🏡</div>
+    <div class="logo-text">
+      <div class="sub">Sales Intelligence</div>
+      <div class="main">Villa Punto de Vista</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="doRefresh(this)" style="background:rgba(200,164,94,.1);border:1px solid rgba(200,164,94,.3);color:var(--gold);border-radius:8px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s" onmouseover="this.style.background='rgba(200,164,94,.2)'" onmouseout="this.style.background='rgba(200,164,94,.1)'">
+        <span id="refreshIcon">↻</span> REFRESH
+      </button>
+      <div class="live-badge"><span class="live-dot"></span>LIVE · Supabase</div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);text-align:right" id="headerSub">vw_deals_dashboard · All time</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim2);text-align:right" id="lastRefreshed"></div>
+  </div>
+</header>
+
+<div class="period-bar fade-in d1">
+  <span class="period-label">Period</span>
+  <button class="period-btn" onclick="setPeriod('thisweek')">This Week</button>
+  <button class="period-btn" onclick="setPeriod('lastweek')">Last Week</button>
+  <button class="period-btn" onclick="setPeriod('thismonth')">This Month</button>
+  <button class="period-btn" onclick="setPeriod('lastmonth')">Last Month</button>
+  <button class="period-btn" onclick="setPeriod('thisquarter')">This Quarter</button>
+  <button class="period-btn" onclick="setPeriod('lastquarter')">Last Quarter</button>
+  <button class="period-btn" onclick="setPeriod('thisyear')">This Year</button>
+  <button class="period-btn" onclick="setPeriod('lastyear')">Last Year</button>
+  <div class="period-sep"></div>
+  <button class="period-btn active" onclick="setPeriod('all')">All Time</button>
+  <div class="period-sep"></div>
+  <button class="period-btn" id="customBtn" onclick="toggleCustomRange()">📅 Custom</button>
+  <div class="period-stat" id="periodStat"><span>Showing: </span><b id="periodLabel">All Records</b></div>
+</div>
+<div class="custom-range-bar" id="customRangeBar">
+  <span class="period-label">Custom Range</span>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px">
+      <label style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase">From</label>
+      <input type="date" id="customFrom" class="date-input" oninput="applyCustomRange()">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <label style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase">To</label>
+      <input type="date" id="customTo" class="date-input" oninput="applyCustomRange()">
+    </div>
+    <button class="period-btn" onclick="clearCustomRange()" style="font-size:10px;padding:4px 10px">✕ Clear</button>
+    <span id="customRangeInfo" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal)"></span>
+  </div>
+</div>
+
+<div class="main-tabs fade-in d2">
+  <button class="main-tab active" onclick="showTab('overview')" id="tab-overview">📊 Overview</button>
+  <button class="main-tab" onclick="showTab('pipeline')" id="tab-pipeline">🔀 Pipeline</button>
+  <button class="main-tab" onclick="showTab('traffic')" id="tab-traffic">🌐 Traffic &amp; Source</button>
+  <button class="main-tab" onclick="showTab('geography')" id="tab-geography">🌍 Geography</button>
+  <button class="main-tab" onclick="showTab('satisfaction')" id="tab-satisfaction">⭐ Satisfaction</button>
+</div>
+
+<!-- TAB: OVERVIEW -->
+<div class="tab-pane active" id="pane-overview">
+  <div class="kpi-strip fade-in d2">
+    <div class="kpi" style="--accent:var(--gold)"><div class="kpi-icon">💰</div><div class="kpi-label">Total Revenue</div><div class="kpi-val" style="color:var(--gold)" id="kRevenue">—</div><div class="kpi-sub" id="kRevenueSub">—</div></div>
+    <div class="kpi" style="--accent:var(--green)"><div class="kpi-icon">✅</div><div class="kpi-label">Won</div><div class="kpi-val" style="color:var(--green)" id="kWon">—</div><div class="kpi-sub" id="kWonSub">—</div></div>
+    <div class="kpi" style="--accent:var(--red)"><div class="kpi-icon">❌</div><div class="kpi-label">Lost</div><div class="kpi-val" style="color:var(--red)" id="kLost">—</div><div class="kpi-sub" id="kLostSub">—</div></div>
+    <div class="kpi" style="--accent:var(--teal)"><div class="kpi-icon">◎</div><div class="kpi-label">Active Pipeline</div><div class="kpi-val" style="color:var(--teal)" id="kActive">—</div><div class="kpi-sub" id="kActiveSub">—</div></div>
+    <div class="kpi" style="--accent:var(--purple)"><div class="kpi-icon">🎯</div><div class="kpi-label">Avg. Ticket</div><div class="kpi-val" style="color:var(--purple)" id="kTicket">—</div><div class="kpi-sub">per Won deal</div></div>
+    <div class="kpi" style="--accent:var(--amber)"><div class="kpi-icon">📋</div><div class="kpi-label">Total Deals</div><div class="kpi-val" style="color:var(--amber)" id="kTotal">—</div><div class="kpi-sub" id="kTotalSub">—</div></div>
+  </div>
+  <div class="g2 fade-in d2">
+    <div class="card span2">
+      <div class="card-title">Monthly Volume &amp; Revenue <span class="badge" id="monthlyBadge">All time</span></div>
+      <div class="chart-wrap" style="height:210px"><canvas id="monthlyChart"></canvas></div>
+    </div>
+  </div>
+  <div class="g3 fade-in d3">
+    <div class="card">
+      <div class="card-title">Visit Intent</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:130px;height:130px;flex-shrink:0"><canvas id="purposeChart"></canvas></div>
+        <div style="flex:1" id="purposeLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Check-in Demand <span class="badge">Upcoming</span></div>
+      <div class="chart-wrap" style="height:150px"><canvas id="checkinChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Executive Insights</div>
+      <div class="insight" style="--c:var(--red)"><div class="i-title">⚠️ Stalled Pipeline</div><div class="i-body">Cold+Tel. is the top stage. Without automated follow-up, loss rate will continue to rise.</div></div>
+      <div class="insight" style="--c:var(--gold)"><div class="i-title">💡 Both Villas Package</div><div class="i-body">Higher avg ticket vs individual villa. Prioritize this package in outreach.</div></div>
+      <div class="insight" style="--c:var(--amber)"><div class="i-title">🔥 Google Paid Dependency</div><div class="i-body">Dominant lead source. Diversify into ChatGPT Organic and direct outreach.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: PIPELINE -->
+<div class="tab-pane" id="pane-pipeline">
+  <div class="g2 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Pipeline by Stage <span class="badge" id="pipelineBadge"></span></div>
+      <div class="funnel" id="funnelEl"></div>
+    </div>
+  </div>
+  <div class="g3 fade-in d2">
+    <div class="card">
+      <div class="card-title">Pipeline Health</div>
+      <div id="pipelineHealth"></div>
+    </div>
+    <div class="card span2">
+      <div class="card-title">Villa Performance</div>
+      <div class="metric-list" id="villaList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: TRAFFIC -->
+<div class="tab-pane" id="pane-traffic">
+  <div class="channel-grid fade-in d1" id="channelCards"></div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Leads by Traffic Source</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="trafficChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Channel Mix</div>
+      <div id="channelMix"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d3">
+    <div class="card">
+      <div class="card-title">Revenue by Traffic Source <span class="badge">Won deals only</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="revenueSourceChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Trip Purpose vs Traffic Source</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="purposeSourceChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: GEOGRAPHY -->
+<div class="tab-pane" id="pane-geography">
+  <div class="g5 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Leads by Country</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="countryChart"></canvas></div>
+      <div class="geo-grid" style="margin-top:14px" id="countryPills"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top US States</div>
+      <div id="statesList"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Leads by State (US)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="statesChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Country Conversion Rates</div>
+      <div id="countryConv" style="margin-top:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: SATISFACTION -->
+<div class="tab-pane" id="pane-satisfaction">
+  <div class="g3 fade-in d1">
+    <div class="card span2">
+      <div class="card-title">Guest Survey Scores <span class="badge">Post-stay ratings</span></div>
+      <div id="surveyScores"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Survey Overview</div>
+      <div id="surveyOverview"></div>
+    </div>
+  </div>
+  <div class="g2 fade-in d2">
+    <div class="card">
+      <div class="card-title">Scores by Category <span class="badge">Radar</span></div>
+      <div style="height:260px;display:flex;align-items:center;justify-content:center">
+        <canvas id="surveyRadar" style="max-height:260px"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Survey Records</div>
+      <div id="surveyRecords" style="overflow-y:auto;max-height:300px"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="wrap" style="padding-top:0">
+  <footer class="fade-in">
+    <div class="f-left">Villa Punto de Vista · Executive Dashboard v2 · Supabase vw_deals_dashboard</div>
+    <div class="f-right" id="footerRight"></div>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="modalTitle">Deal Details</div><div class="modal-sub" id="modalSub"></div></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="drill-table"><thead id="drillHead"></thead><tbody id="drillBody"></tbody></table>
+    </div>
+    <div class="modal-count" id="modalCount"></div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://ikebqhtughueiwfaoqcj.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlr' +
+               'ZWJxaHR1Z2h1ZWl3ZmFvcWNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzY0NzMsImV4' +
+               'cCI6MjA4ODExMjQ3M30.7WN1c3oTUQSfqAz6y1at00kAIy_yZBf6HQZ64U2t-Tw';
+const PAGE = 1000;
+const FIELDS = [
+  'deal_id','deal_name','pipeline_stage','probability','status','created_at',
+  'client_creation_date_cus_1593388','webfx_source_cus_3854211','webfx_medium_cus_3854212',
+  'country_text_cus_3879905','state_cus_530951','villa_service_text_cus_2990224',
+  'overnight_guests_cus_79048','check_in_cus_79049','rental_total_cus_3818376',
+  'client_first_name_cus_3057208','survey_overall_satisfaction_cus_3858473',
+  'survey_pre_arrival_cus_3858474','survey_villa_manager_cus_3858475',
+  'survey_accommodations_cus_3858476','survey_housekeeping_cus_3858477',
+  'survey_breakfast_cus_3858478','survey_overall_experience_cus_3858479'
+].join(',');
+
+let RAW_DEALS = [];
+let filteredDeals = [];
+let currentPeriod = 'all';
+let charts = {};
+
+const C = {gold:'#C8A45E',teal:'#2CC4C4',green:'#2ECC8A',red:'#E05C5C',amber:'#F5A623',purple:'#9B7EF8',blue:'#4B9EF5',dim:'#5C7294'};
+const PIE_COLORS = [C.gold,C.teal,C.purple,C.green,C.red,C.amber,C.blue,'#F472B6','#34D399','#A78BFA'];
+const GRID = 'rgba(26,40,64,.7)';
+
+// ── Supabase fetch ─────────────────────────────────────
+async function fetchFromSupabase() {
+  let all = [], offset = 0;
+  while (true) {
+    const url = `${SB_URL}/rest/v1/deals?select=${FIELDS}&order=created_at.desc&limit=${PAGE}&offset=${offset}`;
+    const res = await fetch(url, {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Accept':'application/json'}});
+    if (!res.ok) throw new Error(`Supabase ${res.status}`);
+    const page = await res.json();
+    all = all.concat(page);
+    if (page.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all.map(mapRow);
+}
+
+function mapRow(d) {
+  const revenue = parseFloat(String(d.rental_total_cus_3818376||'').replace(/[^0-9.]/g,''))||null;
+  const check_in = d.check_in_cus_79049 ? String(d.check_in_cus_79049).replace(/\//g,'-').slice(0,10) : null;
+  const created_date = (d.client_creation_date_cus_1593388||d.created_at||'').slice(0,10);
+  const src = (d.webfx_source_cus_3854211||'').toLowerCase();
+  const med = (d.webfx_medium_cus_3854212||'').toLowerCase();
+  return {
+    deal_id:d.deal_id, deal_name:d.deal_name||'', pipeline_stage:d.pipeline_stage||'Unknown',
+    status:d.status, created_date, country:d.country_text_cus_3879905||null,
+    state:d.state_cus_530951||null, trip_purpose:d.villa_service_text_cus_2990224||null,
+    traffic_source:src||null, traffic_medium:med||null, revenue, check_in,
+    client_name:d.client_first_name_cus_3057208||null,
+    survey_overall:     parseFloat(d.survey_overall_satisfaction_cus_3858473)||null,
+    survey_pre_arrival: parseFloat(d.survey_pre_arrival_cus_3858474)||null,
+    survey_manager:     parseFloat(d.survey_villa_manager_cus_3858475)||null,
+    survey_rooms:       parseFloat(d.survey_accommodations_cus_3858476)||null,
+    survey_housekeeping:parseFloat(d.survey_housekeeping_cus_3858477)||null,
+    survey_breakfast:   parseFloat(d.survey_breakfast_cus_3858478)||null,
+    survey_experience:  parseFloat(d.survey_overall_experience_cus_3858479)||null,
+  };
+}
+
+// ── Period logic ───────────────────────────────────────
+function getPeriodDates(key) {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  const dow = now.getDay();
+  const mondayOff = (dow===0)?6:dow-1;
+  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate()-mondayOff); startOfWeek.setHours(0,0,0,0);
+  const quarter = Math.floor(m/3);
+  const d = dt => dt.toISOString().slice(0,10);
+  return ({
+    all:         {from:'2000-01-01',to:'2099-12-31',label:'All Records'},
+    thisweek:    {from:d(startOfWeek),to:d(now),label:'This Week'},
+    lastweek:    {from:d(new Date(startOfWeek-7*86400000)),to:d(new Date(startOfWeek-1)),label:'Last Week'},
+    thismonth:   {from:d(new Date(y,m,1)),to:d(now),label:'This Month'},
+    lastmonth:   {from:d(new Date(y,m-1,1)),to:d(new Date(y,m,0)),label:'Last Month'},
+    thisquarter: {from:d(new Date(y,quarter*3,1)),to:d(now),label:'This Quarter'},
+    lastquarter: {from:d(new Date(y,(quarter-1)*3,1)),to:d(new Date(y,quarter*3,0)),label:'Last Quarter'},
+    thisyear:    {from:d(new Date(y,0,1)),to:d(now),label:'This Year'},
+    lastyear:    {from:d(new Date(y-1,0,1)),to:d(new Date(y-1,11,31)),label:'Last Year'},
+  })[key]||{from:'2000-01-01',to:'2099-12-31',label:document.getElementById('periodLabel')?.textContent||'Custom'};
+}
+
+function setPeriod(key) {
+  currentPeriod = key;
+  // Close custom range bar when a preset is selected
+  document.getElementById('customRangeBar').classList.remove('open');
+  document.getElementById('customBtn').classList.remove('active');
+  document.querySelectorAll('.period-btn').forEach(b => {
+    const oc = b.getAttribute('onclick')||'';
+    b.classList.toggle('active', oc.includes("'"+key+"'"));
+  });
+  const {from,to,label} = getPeriodDates(key);
+  document.getElementById('periodLabel').textContent = label;
+  filteredDeals = RAW_DEALS.filter(d => d.created_date >= from && d.created_date <= to);
+  refreshAllCharts();
+}
+
+function toggleCustomRange() {
+  const bar = document.getElementById('customRangeBar');
+  const btn = document.getElementById('customBtn');
+  const isOpen = bar.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) {
+    // Pre-fill dates with current period range if useful
+    const from = document.getElementById('customFrom');
+    const to   = document.getElementById('customTo');
+    if (!from.value && !to.value) {
+      const {from:f, to:t} = getPeriodDates(currentPeriod);
+      if (f !== '2000-01-01') from.value = f;
+      if (t !== '2099-12-31') to.value = t;
+    }
+  }
+}
+
+function applyCustomRange() {
+  const from = document.getElementById('customFrom').value;
+  const to   = document.getElementById('customTo').value;
+  if (!from && !to) return;
+  const f = from || '2000-01-01';
+  const t = to   || '2099-12-31';
+  if (from && to && from > to) {
+    document.getElementById('customRangeInfo').textContent = '⚠ End must be after start';
+    return;
+  }
+  // Deactivate all preset buttons
+  document.querySelectorAll('.period-btn').forEach(b => {
+    const oc = b.getAttribute('onclick')||'';
+    if (oc.includes('setPeriod')) b.classList.remove('active');
+  });
+  document.getElementById('customBtn').classList.add('active');
+  currentPeriod = 'custom';
+  const label = from && to ? `${from} → ${to}` : from ? `From ${from}` : `Until ${to}`;
+  document.getElementById('periodLabel').textContent = label;
+  document.getElementById('customRangeInfo').textContent = '';
+  filteredDeals = RAW_DEALS.filter(d => d.created_date >= f && d.created_date <= t);
+  refreshAllCharts();
+}
+
+function clearCustomRange() {
+  document.getElementById('customFrom').value = '';
+  document.getElementById('customTo').value   = '';
+  document.getElementById('customRangeInfo').textContent = '';
+  document.getElementById('customRangeBar').classList.remove('open');
+  document.getElementById('customBtn').classList.remove('active');
+  setPeriod('all');
+}
+
+// ── Source normalizer ──────────────────────────────────
+function normalizeSource(d) {
+  const s = d.traffic_source||'', m = d.traffic_medium||'';
+  if (s==='google') return m==='organic'?'Google Organic':'Google Paid';
+  if (s==='chatgpt.com'||s==='chatgpt') return 'ChatGPT';
+  if (s==='fb'||s==='facebook') return 'Facebook Paid';
+  if (s==='ig'||s==='instagram') return 'Instagram';
+  if (s==='pinterest') return 'Pinterest';
+  if (s.includes('weddingwire')) return 'WeddingWire';
+  if (s==='direct') return 'Direct';
+  if (!s) return 'Unknown';
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+// ── computeStats ───────────────────────────────────────
+function computeStats(deals) {
+  const won   = deals.filter(d=>d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay').length;
+  const lost  = deals.filter(d=>d.pipeline_stage==='Lost').length;
+  const revenue = deals.reduce((s,d)=>s+(d.revenue||0),0);
+  const wonDeals = deals.filter(d=>d.revenue>0);
+  const avgTicket = wonDeals.length ? revenue/wonDeals.length : 0;
+
+  const stages={}, purposes={}, countries={}, states={}, months={};
+  const traffic={};
+
+  deals.forEach(d => {
+    // stages
+    const st=d.pipeline_stage;
+    if(!stages[st]) stages[st]={stage:st,count:0,revenue:0};
+    stages[st].count++; stages[st].revenue+=(d.revenue||0);
+
+    // purposes
+    if(d.trip_purpose){
+      const p=d.trip_purpose.trim();
+      if(!purposes[p]) purposes[p]=0;
+      purposes[p]++;
+    }
+
+    // traffic
+    if(d.traffic_source){
+      const lbl=normalizeSource(d);
+      if(!traffic[lbl]) traffic[lbl]={label:lbl,src:d.traffic_source,leads:0,won:0,revenue:0,purposes:{}};
+      traffic[lbl].leads++;
+      if(d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay'){
+        traffic[lbl].won++; traffic[lbl].revenue+=(d.revenue||0);
+      }
+      if(d.trip_purpose){
+        const p=d.trip_purpose.trim();
+        traffic[lbl].purposes[p]=(traffic[lbl].purposes[p]||0)+1;
+      }
+    }
+
+    // countries
+    const c=d.country||'Unknown';
+    if(!countries[c]) countries[c]={country:c,leads:0,won:0,lost:0,revenue:0,flag:flagFor(c)};
+    countries[c].leads++;
+    if(d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay'){countries[c].won++;countries[c].revenue+=(d.revenue||0);}
+    if(d.pipeline_stage==='Lost') countries[c].lost++;
+
+    // states
+    if(d.state&&d.country==='United States'){
+      states[d.state]=(states[d.state]||0)+1;
+    }
+
+    // months
+    const mk=d.created_date?d.created_date.slice(0,7):'';
+    if(mk){
+      const dt=new Date(mk+'-01');
+      const lbl=dt.toLocaleString('en',{month:'short',year:'2-digit'});
+      if(!months[mk]) months[mk]={k:mk,month:lbl,leads:0,won:0,revenue:0};
+      months[mk].leads++;
+      if(d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay'){months[mk].won++;months[mk].revenue+=(d.revenue||0);}
+    }
+  });
+
+  return {total:deals.length,won,lost,active:deals.length-won-lost,revenue,avgTicket,stages,purposes,traffic,countries,states,months};
+}
+
+function flagFor(country) {
+  const map={'United States':'🇺🇸','Mexico':'🇲🇽','Venezuela':'🇻🇪','Colombia':'🇨🇴','Canada':'🇨🇦','Brazil':'🇧🇷','Argentina':'🇦🇷','Spain':'🇪🇸','Chile':'🇨🇱','Peru':'🇵🇪','Ecuador':'🇪🇨','Panama':'🇵🇦','Costa Rica':'🇨🇷','Dominican Republic':'🇩🇴','Puerto Rico':'🇵🇷'};
+  return map[country]||'🌐';
+}
+
+// ── Chart factory ──────────────────────────────────────
+function mkChart(id,config) {
+  if(charts[id]) charts[id].destroy();
+  const ctx=document.getElementById(id);
+  if(!ctx) return null;
+  charts[id]=new Chart(ctx.getContext('2d'),config);
+  return charts[id];
+}
+
+// ── KPIs ───────────────────────────────────────────────
+function fmt$(n){return n>=1000000?`$${(n/1000000).toFixed(1)}M`:n>=1000?`$${(n/1000).toFixed(0)}k`:`$${Math.round(n)}`;}
+
+function updateKPIs(s) {
+  document.getElementById('kRevenue').textContent=fmt$(s.revenue);
+  document.getElementById('kRevenueSub').textContent=`${s.won} deals closed`;
+  document.getElementById('kWon').textContent=s.won;
+  document.getElementById('kWonSub').innerHTML=`<b>${s.total?Math.round(s.won/s.total*100):0}%</b> conv. rate`;
+  document.getElementById('kLost').textContent=s.lost;
+  document.getElementById('kLostSub').innerHTML=`<b>${s.total?Math.round(s.lost/s.total*100):0}%</b> loss rate`;
+  document.getElementById('kActive').textContent=s.active;
+  document.getElementById('kActiveSub').textContent=`${s.total?Math.round(s.active/s.total*100):0}% of total`;
+  document.getElementById('kTicket').textContent=fmt$(s.avgTicket);
+  document.getElementById('kTotal').textContent=s.total;
+  document.getElementById('kTotalSub').textContent=getPeriodDates(currentPeriod).label;
+  document.getElementById('headerSub').textContent=`vw_deals_dashboard · ${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} records`;
+}
+
+// ── OVERVIEW charts ────────────────────────────────────
+function renderMonthly(s) {
+  const data=Object.values(s.months).sort((a,b)=>a.k.localeCompare(b.k));
+  mkChart('monthlyChart',{
+    data:{labels:data.map(m=>m.month),datasets:[
+      {type:'bar',label:'Leads',data:data.map(m=>m.leads),backgroundColor:'rgba(44,196,196,.2)',borderColor:'rgba(44,196,196,.5)',borderWidth:1,borderRadius:4,yAxisID:'y'},
+      {type:'bar',label:'Won',data:data.map(m=>m.won),backgroundColor:'rgba(46,204,138,.5)',borderColor:'rgba(46,204,138,.8)',borderWidth:1,borderRadius:4,yAxisID:'y'},
+      {type:'line',label:'Revenue',data:data.map(m=>m.revenue),borderColor:C.gold,borderWidth:2.5,pointBackgroundColor:C.gold,pointRadius:3,tension:.4,yAxisID:'y2',fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(evt,els)=>{if(!els.length)return;const idx=els[0].index;const key=data[idx].k;const deals=filteredDeals.filter(d=>d.created_date&&d.created_date.slice(0,7)===key);showDrill(`Month: ${data[idx].month}`,`${deals.length} deals`,deals);},
+      plugins:{legend:{labels:{color:C.dim,font:{size:10,family:'DM Mono'},boxWidth:10}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='Revenue'?`Revenue: ${fmt$(ctx.parsed.y)}`:`${ctx.dataset.label}: ${ctx.parsed.y}`}}},
+      scales:{y:{position:'left',grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y2:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.gold,font:{size:10},callback:v=>v>=1000?fmt$(v):''}},x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}
+  });
+  document.getElementById('monthlyBadge').textContent=`${data.length} months`;
+}
+
+function renderPurpose(s) {
+  const entries=Object.entries(s.purposes).sort((a,b)=>b[1]-a[1]);
+  const labels=entries.map(e=>e[0]),vals=entries.map(e=>e[1]);
+  mkChart('purposeChart',{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:PIE_COLORS,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      onClick:(evt,els)=>{if(!els.length)return;drillByPurpose(labels[els[0].index]);},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}}}});
+  const el=document.getElementById('purposeLegend'); el.innerHTML='';
+  entries.slice(0,6).forEach(([name,val],i)=>{
+    el.innerHTML+=`<div class="donut-row" onclick="drillByPurpose('${name.replace(/'/g,"\\'")}')"><div class="donut-dot" style="background:${PIE_COLORS[i]}"></div><span class="donut-lbl">${name}</span><span class="donut-val">${val}</span></div>`;
+  });
+}
+
+function renderCheckin() {
+  const buckets={};
+  RAW_DEALS.forEach(d=>{
+    if(!d.check_in)return;
+    const dt=new Date(d.check_in);
+    if(isNaN(dt)||dt.getFullYear()<2025)return;
+    const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const lbl=dt.toLocaleString('en',{month:'short',year:'2-digit'});
+    if(!buckets[key])buckets[key]={key,lbl,requested:0,confirmed:0};
+    buckets[key].requested++;
+    if(d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay')buckets[key].confirmed++;
+  });
+  const data=Object.values(buckets).sort((a,b)=>a.key.localeCompare(b.key));
+  if(!data.length)return;
+  mkChart('checkinChart',{type:'bar',data:{labels:data.map(d=>d.lbl),datasets:[
+    {label:'Requested',data:data.map(d=>d.requested),backgroundColor:'rgba(75,158,245,.3)',borderColor:'rgba(75,158,245,.6)',borderWidth:1,borderRadius:4},
+    {label:'Confirmed',data:data.map(d=>d.confirmed),backgroundColor:'rgba(46,204,138,.65)',borderColor:'rgba(46,204,138,.9)',borderWidth:1,borderRadius:4},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    onClick:(evt,els)=>{if(!els.length)return;const key=data[els[0].index].key;const deals=RAW_DEALS.filter(d=>d.check_in&&d.check_in.slice(0,7)===key);showDrill(`Check-in: ${data[els[0].index].lbl}`,`${deals.length} deals`,deals);},
+    plugins:{legend:{labels:{color:C.dim,font:{size:9,family:'DM Mono'},boxWidth:8}}},
+    scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:9},maxRotation:45}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:9}}}}}});
+}
+
+// ── PIPELINE ───────────────────────────────────────────
+const STAGE_COLORS={'Cold +Tel.':C.teal,'Lost':C.red,'Won':'#2ECC8A','Won Complimentary Stay':'#A3E635','Proposal':C.gold,'Negotiation':C.purple,'Warm':C.amber,'Active Nurturing':'#34D399','Passive Nurturing':'#7A9EC4','NEW LEAD':C.blue,'Close/Proposal Signed':'#4ADE80','In-process':'#60A5FA','Lost (1)':'#F87171','Won (VD)':'#86EFAC'};
+
+function renderPipeline(s) {
+  const stages=Object.values(s.stages).sort((a,b)=>b.count-a.count);
+  const maxN=stages[0]?.count||1;
+  const el=document.getElementById('funnelEl'); el.innerHTML='';
+  stages.forEach(st=>{
+    const pct=Math.round(st.count/maxN*100);
+    const col=STAGE_COLORS[st.stage]||C.dim;
+    el.innerHTML+=`<div class="funnel-row" onclick="drillStage('${st.stage.replace(/'/g,"\\'")}')">
+      <div class="funnel-label">${st.stage}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:linear-gradient(90deg,${col}88,${col}22);border-left-color:${col}"></div></div>
+      <div class="funnel-n" style="color:${col}">${st.count}</div>
+    </div>`;
+  });
+  document.getElementById('pipelineBadge').textContent=`${filteredDeals.length} deals`;
+
+  const total=s.total||1;
+  const coldCount=s.stages['Cold +Tel.']?.count||0;
+  document.getElementById('pipelineHealth').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--green)">
+        <div style="color:var(--green);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${Math.round(s.won/total*100)}%</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">Conversion Rate</div>
+        <div style="font-size:10px;color:var(--dim)">${s.won} Won deals · ${fmt$(s.revenue)} revenue</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--red)">
+        <div style="color:var(--red);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${Math.round(s.lost/total*100)}%</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">Loss Rate</div>
+        <div style="font-size:10px;color:var(--dim)">${s.lost} deals lost</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--amber)">
+        <div style="color:var(--amber);font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">${Math.round(coldCount/total*100)}%</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">Cold Pipeline</div>
+        <div style="font-size:10px;color:var(--dim)">${coldCount} in Cold+Tel.</div>
+      </div>
+    </div>`;
+
+  const villaKeys=[
+    {key:'both',  label:'Both Villas',         col:C.gold,   match:n=>/BOTH VILLAS/i.test(n)||/DUAL VILLA/i.test(n)},
+    {key:'pdv',   label:'Villa Punto de Vista', col:C.teal,   match:n=>/PUNTO DE VISTA/i.test(n)&&!/LA ISLA/i.test(n)&&!/BOTH/i.test(n)},
+    {key:'isla',  label:'Villa La Isla',        col:C.purple, match:n=>/LA ISLA/i.test(n)&&!/BOTH/i.test(n)},
+  ];
+  const vs={};
+  villaKeys.forEach(v=>{vs[v.key]={label:v.label,col:v.col,deals:0,revenue:0,won:0};});
+  filteredDeals.forEach(d=>{
+    villaKeys.forEach(v=>{
+      if(v.match(d.deal_name||'')){
+        vs[v.key].deals++;
+        if(d.pipeline_stage==='Won'||d.pipeline_stage==='Won Complimentary Stay'){vs[v.key].won++;vs[v.key].revenue+=(d.revenue||0);}
+      }
+    });
+  });
+  document.getElementById('villaList').innerHTML=villaKeys.map(v=>{
+    const st=vs[v.key];
+    return `<div class="metric-item" style="border-left:3px solid ${v.col}" onclick="drillVilla('${v.label}')">
+      <div><div class="metric-name">${v.label}</div><div class="metric-detail">${st.deals} leads · ${st.won} won</div></div>
+      <div class="metric-big" style="color:${v.col}">${st.revenue>0?fmt$(st.revenue):'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── TRAFFIC ────────────────────────────────────────────
+function renderTraffic(s) {
+  const trafficArr=Object.values(s.traffic).sort((a,b)=>b.leads-a.leads);
+  const colArr=[C.gold,C.teal,C.purple,C.green,C.amber,C.blue,'#F472B6','#34D399'];
+
+  // Channel cards top 6
+  const el=document.getElementById('channelCards'); el.innerHTML='';
+  trafficArr.slice(0,6).forEach((ch,i)=>{
+    const conv=ch.leads?Math.round(ch.won/ch.leads*100):0;
+    el.innerHTML+=`<div class="channel-card" onclick="drillChannel('${ch.src||ch.label}')">
+      <div class="channel-name">${ch.label}</div>
+      <div class="channel-leads" style="color:${colArr[i]}">${ch.leads}</div>
+      <div class="channel-meta"><span>${ch.won} Won</span><span class="channel-conv">${conv}% conv.</span>${ch.revenue>0?`<span>${fmt$(ch.revenue)}</span>`:''}</div>
+    </div>`;
+  });
+
+  // Leads bar chart (horizontal)
+  mkChart('trafficChart',{type:'bar',data:{labels:trafficArr.map(t=>t.label),datasets:[{data:trafficArr.map(t=>t.leads),backgroundColor:trafficArr.map((_,i)=>colArr[i%colArr.length]+'bb'),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      onClick:(evt,els)=>{if(!els.length)return;drillChannel(trafficArr[els[0].index].src||trafficArr[els[0].index].label);},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x} leads`}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{display:false},ticks:{color:'#ECF0F8',font:{size:11}}}}}});
+
+  // Channel mix (progress bars)
+  const total=trafficArr.reduce((s,t)=>s+t.leads,0)||1;
+  document.getElementById('channelMix').innerHTML=trafficArr.slice(0,8).map((t,i)=>`
+    <div class="prog-row" onclick="drillChannel('${t.src||t.label}')">
+      <div class="prog-head"><span style="font-size:11px">${t.label}</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:${colArr[i%colArr.length]}">${t.leads} <span style="color:var(--dim)">(${Math.round(t.leads/total*100)}%)</span></span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${t.leads/total*100}%;background:${colArr[i%colArr.length]}"></div></div>
+    </div>`).join('');
+
+  // Revenue by source (horizontal bar)
+  const revData=trafficArr.filter(t=>t.revenue>0);
+  mkChart('revenueSourceChart',{type:'bar',data:{labels:revData.map(t=>t.label),datasets:[{label:'Revenue',data:revData.map(t=>t.revenue),backgroundColor:revData.map((_,i)=>colArr[i%colArr.length]+'cc'),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      onClick:(evt,els)=>{if(!els.length)return;drillChannel(revData[els[0].index].src||revData[els[0].index].label);},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Revenue: ${fmt$(ctx.parsed.x)}`}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10},callback:v=>v>=1000?fmt$(v):''}},y:{grid:{display:false},ticks:{color:'#ECF0F8',font:{size:11}}}}}});
+
+  // Trip Purpose vs Traffic Source (stacked bar)
+  const top5Sources=trafficArr.slice(0,5);
+  const purposeSet=new Set();
+  top5Sources.forEach(t=>Object.keys(t.purposes).forEach(p=>purposeSet.add(p)));
+  const purposeArr=Array.from(purposeSet).slice(0,6);
+  mkChart('purposeSourceChart',{type:'bar',data:{
+    labels:top5Sources.map(t=>t.label),
+    datasets:purposeArr.map((p,i)=>({label:p,data:top5Sources.map(t=>t.purposes[p]||0),backgroundColor:PIE_COLORS[i],borderRadius:3,stack:'a'}))
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:C.dim,font:{size:9,family:'DM Mono'},boxWidth:8}}},
+    scales:{x:{stacked:true,grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{stacked:true,grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}});
+}
+
+// ── GEOGRAPHY ──────────────────────────────────────────
+function renderGeography(s) {
+  const countriesArr=Object.values(s.countries).sort((a,b)=>b.leads-a.leads);
+  const statesArr=Object.entries(s.states).sort((a,b)=>b[1]-a[1]);
+  const colArr=[C.gold,C.teal,C.purple,C.green,C.amber,C.blue,'#F472B6','#34D399'];
+
+  // Country bar chart
+  mkChart('countryChart',{type:'bar',data:{labels:countriesArr.map(c=>c.country),datasets:[
+    {label:'Leads',data:countriesArr.map(c=>c.leads),backgroundColor:colArr.map((c,i)=>i<countriesArr.length?c+'bb':'#334466'),borderRadius:5},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    onClick:(evt,els)=>{if(!els.length)return;drillCountryData(countriesArr[els[0].index].country);},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y} leads`}}},
+    scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}}}}});
+
+  // Country pills (top 6)
+  const pEl=document.getElementById('countryPills'); pEl.innerHTML='';
+  countriesArr.slice(0,6).forEach((c,i)=>{
+    pEl.innerHTML+=`<div class="geo-pill" onclick="drillCountryData('${c.country}')">
+      <div class="geo-flag">${c.flag}</div>
+      <div class="geo-n" style="color:${colArr[i%colArr.length]}">${c.leads}</div>
+      <div class="geo-name">${c.country}</div>
+      ${c.revenue>0?`<div class="geo-rev" style="color:${colArr[i%colArr.length]}">${fmt$(c.revenue)}</div>`:''}
+    </div>`;
+  });
+
+  // Top US States list
+  const stEl=document.getElementById('statesList'); stEl.innerHTML='';
+  const totalUS=statesArr.reduce((s,[,n])=>s+n,0)||1;
+  statesArr.slice(0,8).forEach(([st,n],i)=>{
+    stEl.innerHTML+=`<div class="prog-row" onclick="drillState('${st}')">
+      <div class="prog-head"><span style="font-size:11px">${st}</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:${colArr[i%colArr.length]}">${n}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${n/totalUS*100}%;background:${colArr[i%colArr.length]}"></div></div>
+    </div>`;
+  });
+
+  // US States bar chart
+  const topStates=statesArr.slice(0,12);
+  mkChart('statesChart',{type:'bar',data:{labels:topStates.map(([st])=>st),datasets:[{data:topStates.map(([,n])=>n),backgroundColor:colArr.map((c,i)=>i<topStates.length?c+'bb':'#334466'),borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      onClick:(evt,els)=>{if(!els.length)return;drillState(topStates[els[0].index][0]);},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x} leads`}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:C.dim,font:{size:10}}},y:{grid:{display:false},ticks:{color:'#ECF0F8',font:{size:10}}}}}});
+
+  // Country conversion rates
+  const ccEl=document.getElementById('countryConv'); ccEl.innerHTML='';
+  countriesArr.filter(c=>c.leads>=3).forEach((c,i)=>{
+    const conv=Math.round(c.won/c.leads*100);
+    ccEl.innerHTML+=`<div class="prog-row" onclick="drillCountryData('${c.country}')">
+      <div class="prog-head">
+        <span style="font-size:11px">${c.flag} ${c.country}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:${colArr[i%colArr.length]}">${conv}% <span style="color:var(--dim)">(${c.won}/${c.leads})</span></span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${conv}%;background:${colArr[i%colArr.length]}"></div></div>
+    </div>`;
+  });
+}
+
+// ── SATISFACTION ───────────────────────────────────────
+function renderSatisfaction() {
+  const surveyed=filteredDeals.filter(d=>d.survey_overall!==null);
+  if(!surveyed.length){
+    ['surveyScores','surveyOverview','surveyRecords'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.innerHTML='<div style="color:var(--dim);font-size:12px;padding:20px 0">No survey data for this period.</div>';
+    });
+    return;
+  }
+
+  const categories=[
+    {key:'survey_overall',     label:'Overall Satisfaction'},
+    {key:'survey_pre_arrival', label:'Pre-Arrival Experience'},
+    {key:'survey_manager',     label:'Villa Manager'},
+    {key:'survey_rooms',       label:'Accommodations'},
+    {key:'survey_housekeeping',label:'Housekeeping'},
+    {key:'survey_breakfast',   label:'Breakfast'},
+    {key:'survey_experience',  label:'Overall Experience'},
+  ];
+
+  // Compute averages per category
+  const avgs=categories.map(cat=>{
+    const vals=surveyed.map(d=>d[cat.key]).filter(v=>v!==null&&!isNaN(v));
+    const avg=vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;
+    return {...cat,avg,count:vals.length};
+  });
+
+  // Detect scale (1-5 or 1-10)
+  const allVals=surveyed.flatMap(d=>categories.map(c=>d[c.key]).filter(v=>v!==null));
+  const maxVal=allVals.length?Math.max(...allVals):5;
+  const scale=maxVal>5?10:5;
+
+  // Survey scores (stars rows)
+  const scEl=document.getElementById('surveyScores'); scEl.innerHTML='';
+  avgs.forEach(a=>{
+    if(a.count===0)return;
+    const pct=(a.avg/scale)*100;
+    scEl.innerHTML+=`<div class="stars-row">
+      <span class="stars-label">${a.label}</span>
+      <div class="stars-bar-wrap"><div class="stars-fill" style="width:${pct}%"></div></div>
+      <span class="stars-val">${a.avg.toFixed(1)}</span>
+      <span class="stars-count">n=${a.count}</span>
+    </div>`;
+  });
+
+  // Survey overview
+  const ovEl=document.getElementById('surveyOverview');
+  const totalRespondents=surveyed.length;
+  const overallAvg=avgs.find(a=>a.key==='survey_overall');
+  const experienceAvg=avgs.find(a=>a.key==='survey_experience');
+  const highScore=avgs.filter(a=>a.count>0).reduce((best,a)=>a.avg>best.avg?a:best,{avg:0,label:'—'});
+  const lowScore=avgs.filter(a=>a.count>0).reduce((worst,a)=>a.avg<worst.avg?a:worst,{avg:Infinity,label:'—'});
+  ovEl.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--gold)">
+        <div style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600">${overallAvg?.avg.toFixed(1)||'—'}<span style="font-size:16px;color:var(--dim)">/${scale}</span></div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">Overall Satisfaction</div>
+        <div style="font-size:10px;color:var(--dim)">${totalRespondents} survey responses</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--green)">
+        <div style="font-size:11px;font-weight:500;color:var(--text);margin-bottom:2px">🏆 Highest Score</div>
+        <div style="font-size:12px;color:var(--green)">${highScore.label}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold)">${highScore.avg!==0?highScore.avg.toFixed(1):'—'}/${scale}</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:14px;border-left:3px solid var(--amber)">
+        <div style="font-size:11px;font-weight:500;color:var(--text);margin-bottom:2px">📈 Needs Attention</div>
+        <div style="font-size:12px;color:var(--amber)">${lowScore.label}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold)">${isFinite(lowScore.avg)?lowScore.avg.toFixed(1):'—'}/${scale}</div>
+      </div>
+    </div>`;
+
+  // Radar chart
+  const radarData=avgs.filter(a=>a.count>0);
+  mkChart('surveyRadar',{type:'radar',data:{
+    labels:radarData.map(a=>a.label.split(' ').slice(0,2).join(' ')),
+    datasets:[{label:'Avg Score',data:radarData.map(a=>a.avg),backgroundColor:'rgba(200,164,94,.15)',borderColor:C.gold,borderWidth:2,pointBackgroundColor:C.gold,pointRadius:4}]
+  },options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{min:0,max:scale,grid:{color:GRID},pointLabels:{color:C.dim,font:{size:9,family:'DM Mono'}},ticks:{color:C.dim,font:{size:8},stepSize:scale/5}}},
+    plugins:{legend:{display:false}}}});
+
+  // Survey records table
+  const rrEl=document.getElementById('surveyRecords');
+  rrEl.innerHTML=`<table class="drill-table" style="font-size:11px">
+    <thead><tr>
+      <th>Guest</th><th>Overall</th><th>Experience</th><th>Manager</th><th>Stay Date</th>
+    </tr></thead>
+    <tbody>${surveyed.slice(0,20).map(d=>`<tr>
+      <td>${d.client_name||d.deal_name||'—'}</td>
+      <td style="color:var(--gold)">${d.survey_overall??'—'}</td>
+      <td style="color:var(--teal)">${d.survey_experience??'—'}</td>
+      <td>${d.survey_manager??'—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:10px">${d.check_in||d.created_date||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Tab switching ──────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+id));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.toggle('active',t.id==='tab-'+id));
+  const s=computeStats(filteredDeals);
+  if(id==='pipeline')    renderPipeline(s);
+  if(id==='traffic')     renderTraffic(s);
+  if(id==='geography')   renderGeography(s);
+  if(id==='satisfaction')renderSatisfaction();
+}
+
+// ── refreshAllCharts ───────────────────────────────────
+function refreshAllCharts() {
+  const s=computeStats(filteredDeals);
+  updateKPIs(s);
+  renderMonthly(s); renderPurpose(s); renderCheckin();
+  const activeTab=document.querySelector('.main-tab.active')?.id?.replace('tab-','');
+  if(activeTab==='pipeline')    renderPipeline(s);
+  if(activeTab==='traffic')     renderTraffic(s);
+  if(activeTab==='geography')   renderGeography(s);
+  if(activeTab==='satisfaction')renderSatisfaction();
+  document.getElementById('footerRight').textContent=`${getPeriodDates(currentPeriod).label} · ${filteredDeals.length} deals · ${new Date().toLocaleDateString('en')}`;
+}
+
+// ── Drill-down helpers ─────────────────────────────────
+function showDrill(title,sub,deals) {
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalSub').textContent=sub;
+  document.getElementById('drillHead').innerHTML=`<tr><th>Deal</th><th>Stage</th><th>Country</th><th>Purpose</th><th>Source</th><th>Revenue</th><th>Date</th></tr>`;
+  document.getElementById('drillBody').innerHTML=deals.map(d=>`<tr>
+    <td>${d.deal_name}</td>
+    <td><span class="stage-badge" style="background:${(STAGE_COLORS[d.pipeline_stage]||C.dim)+'22'};color:${STAGE_COLORS[d.pipeline_stage]||C.dim}">${d.pipeline_stage}</span></td>
+    <td>${d.country||'—'}</td>
+    <td>${d.trip_purpose||'—'}</td>
+    <td>${normalizeSource(d)||'—'}</td>
+    <td style="font-family:'DM Mono',monospace">${d.revenue?fmt$(d.revenue):'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px">${d.created_date||'—'}</td>
+  </tr>`).join('');
+  document.getElementById('modalCount').textContent=`${deals.length} records`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function drillStage(st){const deals=filteredDeals.filter(d=>d.pipeline_stage===st);showDrill(`Stage: ${st}`,`${deals.length} deals`,deals);}
+function drillByPurpose(p){const deals=filteredDeals.filter(d=>d.trip_purpose&&d.trip_purpose.trim()===p);showDrill(`Purpose: ${p}`,`${deals.length} deals`,deals);}
+function drillChannel(src){const deals=filteredDeals.filter(d=>d.traffic_source===src||normalizeSource(d)===src);showDrill(`Source: ${src}`,`${deals.length} deals`,deals);}
+function drillCountryData(country){const deals=filteredDeals.filter(d=>d.country===country);showDrill(`Country: ${country}`,`${deals.length} deals`,deals);}
+function drillState(state){const deals=filteredDeals.filter(d=>d.state===state);showDrill(`State: ${state}`,`${deals.length} deals`,deals);}
+function drillVilla(label){
+  const villaKeys=[
+    {label:'Both Villas',match:n=>/BOTH VILLAS/i.test(n)||/DUAL VILLA/i.test(n)},
+    {label:'Villa Punto de Vista',match:n=>/PUNTO DE VISTA/i.test(n)&&!/LA ISLA/i.test(n)&&!/BOTH/i.test(n)},
+    {label:'Villa La Isla',match:n=>/LA ISLA/i.test(n)&&!/BOTH/i.test(n)},
+  ];
+  const vk=villaKeys.find(v=>v.label===label);
+  if(!vk)return;
+  const deals=filteredDeals.filter(d=>vk.match(d.deal_name||''));
+  showDrill(`Villa: ${label}`,`${deals.length} deals`,deals);
+}
+
+// ── Load / Refresh ─────────────────────────────────────
+async function doRefresh(btn) {
+  const icon=document.getElementById('refreshIcon');
+  if(icon)icon.style.animation='spin360 .9s linear infinite';
+  try {
+    RAW_DEALS=await fetchFromSupabase();
+    setPeriod(currentPeriod);
+    document.getElementById('lastRefreshed').textContent=`Last refreshed: ${new Date().toLocaleTimeString()}`;
+  } catch(e) {
+    console.error('Fetch error',e);
+    document.getElementById('lastRefreshed').textContent=`Error: ${e.message}`;
+  } finally {
+    if(icon)icon.style.animation='';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>doRefresh());
+</script>
+</body>
+</html>

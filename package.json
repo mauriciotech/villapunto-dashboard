@@ -1,0 +1,13 @@
+{
+  "name": "villapunto-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 3232 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 3232"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
